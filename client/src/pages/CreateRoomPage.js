@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import '../styles/Form.css'; // Import common form styles
 
-
+import { useNotification } from '../contexts/NotificationContext'; // Import useNotification
 const CreateRoomPage = () => {
+  const { addNotification } = useNotification(); // <-- Call the hook here, at the top level
   const [roomName, setRoomName] = useState('');
   const [error, setError] = useState('');
   const history = useHistory();
@@ -39,14 +40,20 @@ const CreateRoomPage = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || `Failed to create room (status: ${response.status})`);
-      }
-
+        // Handle error responses
+        if (data.message === "You are already in a room. Please leave it before creating a new one.") {
+          addNotification("You can't create a new room while you are already in another room. Please leave the current room first.", 'warning');
+        } else {
+          // For other errors, show a generic failure notification
+          addNotification(data.message || `Failed to create room (status: ${response.status})`, 'error');        
+        }
+      // IMPORTANT: Stop processing here if the response was not OK
+        return;
+    }
+      // If response.ok is true, proceed with the success path
       if (data && data.roomId) {
-        history.push(`/room/${data.roomId}`);
-      } else {
-        // This case should ideally not happen if response.ok is true and roomId is expected
-        throw new Error('Room created but no roomId received.');
+        history.push(`/room/${data.roomId}`); // Navigate on successful creation
+
       }
     } catch (err) {
       console.error('Error creating room:', err);
@@ -76,5 +83,6 @@ const CreateRoomPage = () => {
     </div>
   );
 };
+
 
 export default CreateRoomPage;

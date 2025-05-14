@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const Schema = mongoose.Schema; // Or const { Schema } = mongoose;
 
 const UserSchema = new mongoose.Schema({
   username: {
@@ -27,6 +28,18 @@ const UserSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  // The room this user currently owns (if any)
+  createdRoomId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Room',
+    default: null,
+  },
+  // The room this user is currently participating in (if any)
+  currentRoomId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Room',
+    default: null,
+  }
 });
 
 // Hash password before saving

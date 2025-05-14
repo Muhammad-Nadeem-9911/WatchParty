@@ -13,11 +13,15 @@ const http = require('http');
 const cors = require('cors'); // Missing in original code
 const connectDB = require('./config/db'); // Import DB connection
 const authRoutes = require('./routes/authRoutes'); // Import auth routes
+const initializeRoomRoutes = require('./routes/roomRoutes'); // <-- Rename to reflect it's a function
 const { protect } = require('./middlewares/authMiddleware'); // Import protect middleware
+const { scheduleRoomCleanup } = require('./jobs/roomCleanupJob'); // <-- IMPORT THE CLEANUP JOB SCHEDULER
+const requestIdMiddleware = require('./middlewares/requestIdMiddleware'); // <-- Import request ID middleware
 const jwt = require('jsonwebtoken'); // Import jsonwebtoken
 const User = require('./models/User'); // Import User model
 const Room = require('./models/Room'); // Import Room model
 const { v4: uuidv4 } = require('uuid');
+const roomController = require('./controllers/roomController'); // For handleUserLeaveRoomLogic
 const { Server } = require("socket.io");
 
 
@@ -35,6 +39,9 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 app.use(express.json()); // Apply globally instead of per route
+
+// --- ADD REQUEST ID MIDDLEWARE ---
+app.use(requestIdMiddleware); // Add this middleware early
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -69,84 +76,14 @@ app.get('/', (req, res) => {
   res.send('<h1>WatchParty Server</h1>');
 });
 
+// Initialize roomRoutes with io instance
+const roomRouter = initializeRoomRoutes(io); // Call the function to get the router
+console.log('[SERVER STARTUP] roomRouter initialized. Type:', typeof roomRouter);
+
 app.use('/api/auth', authRoutes); // Mount auth routes
+// --- MOUNT THE NEW ROOM ROUTES ---
+app.use('/api/rooms', roomRouter); // Use the actual router instance
 
-
-// Route to list all active rooms
-app.get('/api/rooms', protect, async (req, res) => {
-  try {
-    const activeRooms = await Room.find().populate('createdBy', 'username'); // Populate creator's username
-    // We need to map the MongoDB _id to 'id' if client expects 'id' from previous in-memory structure
-    // Or, ensure client uses 'roomId' for navigation and '_id' for internal DB refs if needed.
-    // For now, let's send roomId as 'id' for consistency with previous client code.
-    res.json(activeRooms.map(room => ({ id: room.roomId, name: room.name, createdByUsername: room.createdBy.username, createdById: room.createdBy._id })));
-  } catch (error) {
-    console.error('Error fetching rooms:', error);
-    res.status(500).json({ success: false, error: 'Server error while fetching rooms' });
-  }
-});
-
-// Route to create a new room
-app.post('/api/rooms', protect, async (req, res) => {
-  const { roomName } = req.body;
-  console.log(`Room creation requested by user: ${req.user ? req.user.username : 'Unknown (should be protected)'}`);
-  
-  if (!roomName) {
-    return res.status(400).json({ success: false, error: 'Room name is required' });
-  }
-
-  try {
-    const newRoomId = uuidv4();
-    const newRoom = await Room.create({
-      name: roomName,
-      roomId: newRoomId,
-      host: req.user.id, // Set the creator as the initial host
-      createdBy: req.user.id, // req.user is populated by 'protect' middleware
-    });
-    res.status(201).json({ roomId: newRoom.roomId, name: newRoom.name });
-  } catch (error) {
-    console.error('Error creating room:', error);
-    res.status(500).json({ success: false, error: 'Server error while creating room' });
-  }
-});
-
-// Route to get details of a specific room
-app.get('/api/rooms/:roomId', protect, async (req, res) => {
-  const { roomId } = req.params;
-  try {
-    const room = await Room.findOne({ roomId: roomId }).populate('createdBy', 'username');
-    if (!room) {
-      return res.status(404).json({ success: false, error: 'Room not found' });
-    }
-    res.json({ roomId: room.roomId, name: room.name, createdBy: room.createdBy.username });
-  } catch (error) {
-    console.error(`Error fetching room ${roomId}:`, error);
-    res.status(500).json({ success: false, error: 'Server error while fetching room details' });
-  }
-});
-
-// Route to delete a room
-app.delete('/api/rooms/:roomId', protect, async (req, res) => {
-  const { roomId } = req.params;
-  try {
-    const room = await Room.findOne({ roomId: roomId });
-
-    if (!room) {
-      return res.status(404).json({ success: false, error: 'Room not found' });
-    }
-
-    // Check if the logged-in user is the creator of the room
-    if (room.createdBy.toString() !== req.user.id) {
-      return res.status(403).json({ success: false, error: 'User not authorized to delete this room' });
-    }
-
-    await room.deleteOne(); // Use deleteOne() on the document instance
-    res.json({ success: true, message: 'Room deleted successfully' });
-  } catch (error) {
-    console.error(`Error deleting room ${roomId}:`, error);
-    res.status(500).json({ success: false, error: 'Server error while deleting room' });
-  }
-});
 
 // Helper function to get room participants
 const getRoomParticipants = (roomId) => {
@@ -178,12 +115,14 @@ const getRoomParticipants = (roomId) => {
 io.on('connection', (socket) => {
   console.log("=====================================================");
   console.log(`[SERVER IO] !!! NEW SOCKET CONNECTION ATTEMPT !!! Socket ID: ${socket.id}`);
-  const { roomId, token } = socket.handshake.query;
+  let { roomId, token } = socket.handshake.query; // Use let for roomId
   console.log(`[SERVER IO] Handshake Query: roomId=${roomId}, token=${token ? 'PRESENT' : 'ABSENT'}`);
   console.log(`[SERVER IO] JWT_SECRET available in this handler: ${process.env.JWT_SECRET ? 'YES' : 'NO!!!'}`);
   console.log("=====================================================");
-  if (!roomId) {
-    console.log(`Socket ${socket.id} connected without roomId. Disconnecting.`);
+
+  // All connections require a token
+  if (!token) {
+    console.log(`[SERVER IO] Socket ${socket.id} attempted to connect (room query: ${roomId || 'N/A'}) without a token. Disconnecting.`);
     socket.disconnect(true);
     return;
   }
@@ -192,25 +131,31 @@ io.on('connection', (socket) => {
   if (token) {
     const secret = process.env.JWT_SECRET;
     if (!secret) {
-      console.error(`FATAL ERROR: JWT_SECRET is not defined. Socket ${socket.id} for room ${roomId} disconnected.`);
+      console.error(`FATAL ERROR: JWT_SECRET is not defined. Socket ${socket.id} (room query: ${roomId || 'N/A'}) disconnected.`);
       socket.disconnect(true);
       return;
     }
     jwt.verify(token, secret, async (err, decoded) => { // Use the secret, avoid insecure fallback
       if (err) {
-        console.warn(`[SERVER] Socket ${socket.id} for room ${roomId} failed token verification: ${err.message}. Disconnecting.`);
+        console.warn(`[SERVER IO] Socket ${socket.id} (room query: ${roomId || 'N/A'}) failed token verification: ${err.message}. Disconnecting.`);
         socket.disconnect(true);
         return;
       } else {
         // Token is structurally valid and signature matches, now check user and proceed
         try {
           const user = await User.findById(decoded.id).select('-password');
-          if (user) {
+          if (!user) {
+            console.warn(`[SERVER IO] Socket ${socket.id} token valid, but user ${decoded.id} not found in DB. Disconnecting.`);
+            socket.disconnect(true);
+            return;
+          } else {
             socket.user = user; // Attach user info to the socket instance
+            console.log(`[SERVER IO] User ${socket.user.username} (${socket.id}) authenticated. Room query: ${roomId || 'N/A (general connection)'}.`);
             
-            console.log(`[SERVER] User ${socket.user.username} (${socket.id}) authenticated for room ${roomId}. Proceeding to join.`);
-            socket.join(roomId);
-            console.log(`[SERVER] User ${socket.user.username} (${socket.id}) has joined Socket.IO room: ${roomId}`);
+            if (roomId) { // This is a room-specific connection
+              console.log(`[SERVER IO] Proceeding to join room ${roomId} for user ${socket.user.username}.`);
+              socket.join(roomId);
+              console.log(`[SERVER IO] User ${socket.user.username} (${socket.id}) has joined Socket.IO room: ${roomId}`);
 
             // IMMEDIATE TEST EMIT
             socket.emit('direct_test_event', { message: `Hello from server to socket ${socket.id} in room ${roomId}` });
@@ -289,6 +234,15 @@ io.on('connection', (socket) => {
                 console.log(`[SERVER] Sent chat history of ${roomChatHistories[roomId].length} messages to ${user.username} for room ${roomId}`);
             } else {
                 console.log(`[SERVER] Sent empty chat history to ${user.username} for room ${roomId}`);
+            }
+            
+            // Specific event handlers for room-specific sockets go here
+            // (e.g., send_message, load_video, etc. are already here and should remain within the if(roomId) block if they depend on it)
+
+            } else { // No roomId in query - this is a general authenticated socket (e.g., for dashboard)
+              // It's authenticated but not joined to a specific room via query.
+              console.log(`[SERVER IO] User ${socket.user.username} (${socket.id}) established a general authenticated connection.`);
+              // No specific room joining actions here unless you want to add them to a "lobby" room.
             }
 
             // Define canControlVideo helper function within this scope
@@ -445,21 +399,26 @@ io.on('connection', (socket) => {
               }
             });
 
-            // Specific disconnect handler for authenticated user
+            // Disconnect handler for ALL authenticated sockets (general or room-specific)
             socket.on('disconnect', (reason) => {
               const identifier = socket.user ? `${socket.user.username} (${socket.id})` : `Socket ${socket.id}`;
-              console.log(`[SERVER] Authenticated user ${identifier} disconnected from room ${roomId}. Reason: ${reason}`);
-              io.to(roomId).emit('update_participants', getRoomParticipants(roomId));
+              // Use the roomId captured at connection time for this socket instance
+              const connectionRoomId = socket.handshake.query.roomId; // This is the shareable UUID
+              console.log(`[SERVER IO] Authenticated user ${identifier} disconnected. Room query was: ${connectionRoomId || 'N/A'}. Reason: ${reason}`);
+              if (connectionRoomId) { // If it was a room-specific connection, update participants for that room
+                // Call the leave room logic
+                // We need the user's ID (socket.user._id) and the shareable room ID (connectionRoomId)
+                if (socket.user && socket.user._id) {
+                    roomController.handleUserLeaveRoomLogic(socket.user._id, connectionRoomId, io)
+                        .then(result => console.log(`[SERVER IO] handleUserLeaveRoomLogic result for ${identifier} from room ${connectionRoomId}:`, result))
+                        .catch(err => console.error(`[SERVER IO] Error in handleUserLeaveRoomLogic for ${identifier} from room ${connectionRoomId}:`, err));
+                }
+              }
             });
-
-          } else { // User from token not found in DB
-            console.warn(`[SERVER] Socket ${socket.id} token valid, but user ${decoded.id} not found in DB. Disconnecting.`);
-            socket.disconnect(true);
-            return;
           }
         } catch (asyncOperationError) {
           // This catches errors from User.findById, socket.join, Room.findOne, or any other await inside this block
-          console.error(`[SERVER] Error during async operations for user ${decoded?.id} in room ${roomId} after token verification:`, asyncOperationError);
+          console.error(`[SERVER IO] Error during async operations for user ${decoded?.id} (room query: ${roomId || 'N/A'}) after token verification:`, asyncOperationError);
           socket.disconnect(true); 
           return;
         }
@@ -468,7 +427,7 @@ io.on('connection', (socket) => {
   } else {
     // Decide how to handle connections without a token.
     // For a secure app, you usually want to disconnect them.
-    console.log(`[SERVER] Socket ${socket.id} attempted to connect to room ${roomId} without a token. Disconnecting.`);
+    console.log(`[SERVER IO] Socket ${socket.id} attempted to connect (room query: ${roomId || 'N/A'}) without a token. Disconnecting.`);
     socket.disconnect(true);
     return;
   }
@@ -485,15 +444,19 @@ io.on('connection', (socket) => {
   // General disconnect handler (e.g., if auth fails or for unauthenticated sockets)
   socket.on('disconnect', (reason) => {
     // If socket.user is not attached, it means this socket didn't fully authenticate/join.
-    console.log(`[SERVER] Socket ${socket.id} (potentially unauthenticated or pre-join) disconnected. Room query: ${roomId}. Reason: ${reason}`);
+    const connectionRoomId = socket.handshake.query.roomId; // Get roomId from handshake for this specific socket
+    console.log(`[SERVER IO] Socket ${socket.id} (potentially unauthenticated or pre-join) disconnected. Room query: ${connectionRoomId || 'N/A'}. Reason: ${reason}`);
     // If it was in a room, update_participants would be handled by the specific disconnect if it fired,
     // or by Socket.IO's automatic room leaving. We can still broadcast an update if roomId is known.
-    if (roomId) {
-        io.to(roomId).emit('update_participants', getRoomParticipants(roomId));
+    if (connectionRoomId) { // Use the specific roomId for this socket
+        io.to(connectionRoomId).emit('update_participants', getRoomParticipants(connectionRoomId));
     }
   });
 });
 
 server.listen(PORT, () => {
   console.log(`Server listening on *:${PORT}`);
+  
+  // Schedule background jobs
+  scheduleRoomCleanup(); // <-- START THE ROOM CLEANUP JOB
 });
