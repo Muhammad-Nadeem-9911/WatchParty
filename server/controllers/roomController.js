@@ -198,8 +198,52 @@ async function handleUserLeaveRoomLogic(userId, shareableRoomId, io, requestId =
     return { success: true, message: 'Successfully left room.' };
 }
 
+// Reusable logic for deleting a room
+async function handleRoomDeletionLogic(shareableRoomId, ownerId, io, requestId = 'DELETE_JOB') {
+    console.log(`[${requestId}] handleRoomDeletionLogic called for shareableRoomId: ${shareableRoomId}, ownerId: ${ownerId}`);
+    
+    const roomToDelete = await Room.findOne({ roomId: shareableRoomId });
+    if (!roomToDelete) {
+        console.log(`[${requestId}] Room with shareableId ${shareableRoomId} not found during deletion logic.`);
+        // Even if room not found, try to clear createdRoomId for the owner if we know who they are
+        if (ownerId) {
+             await User.findByIdAndUpdate(ownerId, { $set: { createdRoomId: null } });
+             console.log(`[${requestId}] Cleared createdRoomId for owner ${ownerId} as room ${shareableRoomId} was not found.`);
+        }
+        return { success: false, error: 'Room not found.' };
+    }
+
+    // Check if the provided ownerId matches the room's creator
+    if (!roomToDelete.createdBy.equals(ownerId)) {
+        console.log(`[${requestId}] User ${ownerId} is not the owner of room ${shareableRoomId}. Deletion denied.`);
+        return { success: false, error: 'You are not authorized to delete this room.' };
+    }
+
+    // Update all members (including owner) who were in this room
+    const memberIds = roomToDelete.members.map(member => member._id);
+    console.log(`[${requestId}] Clearing currentRoomId for ${memberIds.length} members of room ${shareableRoomId}.`);        
+    await User.updateMany(
+        { _id: { $in: memberIds } },
+        { $set: { currentRoomId: null } }
+    );
+
+    // Specifically clear createdRoomId for the owner
+    await User.findByIdAndUpdate(ownerId, { $set: { createdRoomId: null } });
+    console.log(`[${requestId}] Cleared createdRoomId for owner ${ownerId}.`);
+
+    await Room.findByIdAndDelete(roomToDelete._id);
+    console.log(`[${requestId}] Room document ${shareableRoomId} deleted from DB.`);
+
+    // Emit an event to all connected clients that a room was deleted
+    if (io) {
+        io.emit('room_deleted', { roomId: roomToDelete.roomId }); // Send the shareable roomId
+        console.log(`[${requestId}] Emitted 'room_deleted' for roomId: ${roomToDelete.roomId}`);
+    }
+    return { success: true, message: 'Room successfully deleted.' };
+}
 // Export the helper function so it can be used by server.js
 exports.handleUserLeaveRoomLogic = handleUserLeaveRoomLogic;
+exports.handleRoomDeletionLogic = handleRoomDeletionLogic; // Export the deletion logic
 
 // @desc    Leave a room
 // @route   POST /api/rooms/:roomId/leave
@@ -235,45 +279,12 @@ exports.deleteRoom = async (req, res, io) => { // Accept io as a parameter
     const userId = req.user._id; // Owner's ID from auth middleware
 
     try {
-        console.log(`[${req.requestId}] DELETE /api/rooms/:roomId hit for roomId: ${roomId}, user: ${userId}`);
-        const roomToDelete = await Room.findOne({ roomId });
-        if (!roomToDelete) {
-            return res.status(404).json({ message: 'Room not found.' });
+        const result = await handleRoomDeletionLogic(roomId, userId, io, req.requestId);
+        if (result.success) {
+            res.status(200).json({ message: result.message });
+        } else {
+            res.status(result.error === 'You are not authorized to delete this room.' ? 403 : 400).json({ message: result.error || 'Failed to delete room' }); // Use 403 for auth error
         }
-        console.log(`[${req.requestId}] Found room to delete: ${roomToDelete.roomId}. Checking ownership.`);
-        // Check if the requester is the owner of the room
-        if (!roomToDelete.createdBy.equals(userId)) {
-            return res.status(403).json({ message: 'You are not authorized to delete this room.' });
-        }
-
-        // Update all members (including owner) who were in this room
-        const memberIds = roomToDelete.members.map(member => member._id);
-        console.log(`[${req.requestId}] Clearing currentRoomId for ${memberIds.length} members.`);        
-        await User.updateMany(
-            { _id: { $in: memberIds } },
-            { $set: { currentRoomId: null } }
-        );
-
-        // Specifically clear createdRoomId for the owner
-        const owner = await User.findById(userId);
-        console.log(`[${req.requestId}] Clearing createdRoomId for owner: ${owner.username}.`);
-        if (owner) {
-            owner.createdRoomId = null;
-            // owner.currentRoomId is already set to null by the updateMany above if owner was in members
-            await owner.save();
-        }
-
-        await Room.findByIdAndDelete(roomToDelete._id);
-        console.log(`[${req.requestId}] Room document deleted from DB.`);
-
-        // Emit an event to all connected clients that a room was deleted
-        if (io) {
-            console.log(`[${req.requestId}] Emitting 'room_deleted' event for roomId: ${roomToDelete.roomId}`);
-            io.emit('room_deleted', { roomId: roomToDelete.roomId }); // Send the shareable roomId
-            console.log(`[CONTROLLER] Emitted 'room_deleted' for roomId: ${roomToDelete.roomId}`);
-        }
-
-        res.status(200).json({ message: 'Room successfully deleted.' });
     } catch (error) {
         console.error("Error deleting room:", error);
         res.status(500).json({ message: 'Server error deleting room', error: error.message });
@@ -287,7 +298,7 @@ exports.getRoomDetails = async (req, res) => {
     console.log(`[${req.requestId}] GET /api/rooms/:roomId hit for roomId: ${req.params.roomId}`);
     try {
         const room = await Room.findOne({ roomId: req.params.roomId })
-            .populate('createdBy', 'username')
+            .populate('createdBy', 'username _id') // Ensure _id is populated
             .populate('host', 'username')
             .populate('members', 'username');
 

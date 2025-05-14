@@ -152,6 +152,15 @@ const DashboardPage = () => {
     };
   }, [addNotification]); // Runs once on mount (addNotification is stable)
 
+  // Effect to check for room ended by host message
+  useEffect(() => {
+    const roomEndedByHost = localStorage.getItem('watchPartyRoomEndedByHost');
+    if (roomEndedByHost === 'true') {
+      addNotification("The room you were in was ended by the host.", 'info');
+      localStorage.removeItem('watchPartyRoomEndedByHost'); // Clear the flag
+    }
+  }, [addNotification]); // Runs once on mount (addNotification is stable)
+
   useEffect(() => {
     // Effect for general dashboard socket connection
       // This effect manages the socket instance lifecycle and its listeners.
@@ -191,12 +200,18 @@ const DashboardPage = () => {
     const handleRoomDeleted = ({ roomId: deletedRoomId }) => {
       console.log('[DashboardPage] Received room_deleted event for roomId:', deletedRoomId);
       // Update myRoom state - check if the deleted room was the one I created
+      // Also check if the deleted room was the one the user owned
       setMyRoom(prevMyRoom => {
         if (prevMyRoom && prevMyRoom.roomId === deletedRoomId) {
-          // If it was my room, clear it
           return null;
         }
         return prevMyRoom;
+      });
+      setUserOwnedRoomId(prevOwnedId => {
+        if (prevOwnedId && myRoom?.roomId === deletedRoomId) { // If myRoom (which implies ownership for display) matches
+          return null;
+        }
+        return prevOwnedId; // Use prevOwnedId here, not prevMyRoom
       });
       // Update otherRooms state - filter out the deleted room
       setOtherRooms(prevOtherRooms => prevOtherRooms.filter(room => room.roomId !== deletedRoomId));
@@ -307,6 +322,7 @@ const DashboardPage = () => {
         throw new Error(data.message || 'Failed to delete room');
       }
       setMyRoom(null); // Clear the deleted room from state
+      setUserOwnedRoomId(null); // Also clear the owned room ID state
       addNotification('Room deleted successfully!', 'success');
 
       // Optionally, re-fetch otherRooms or trigger a full data refresh if needed

@@ -100,3 +100,48 @@
     min-width: auto; /* Reset min-width */
   }
 }
+
+
+.roomPageHeader {
+  display: flex; /* Enable flexbox for alignment */
+  justify-content: space-between; /* Pushes title to left, buttons to right */
+  align-items: center; /* Vertically align items in the center */
+  padding: 1rem;
+  background-color: #2c3e50; /* Darker header background */
+  color: #ecf0f1; /* Light text for contrast */
+  border-bottom: 2px solid #34495e;
+}
+
+.roomPageHeader h2 {
+  margin: 0; /* Remove default margin */
+  font-size: 1.8rem;
+}
+
+.roomPageHeaderButtons {
+  display: flex;
+  gap: 0.5rem; /* Space between buttons if both are visible */
+}
+
+.leaveRoomButton, .endRoomButton {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s ease-in-out, transform 0.1s ease;
+}
+
+.leaveRoomButton {
+  background-color: #e74c3c; /* A professional red */
+  color: white;
+}
+
+.endRoomButton {
+  background-color: #c0392b; /* A slightly darker red for distinction or primary action */
+  color: white;
+}
+
+.leaveRoomButton:hover, .endRoomButton:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}

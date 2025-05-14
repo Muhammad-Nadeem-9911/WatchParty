@@ -21,7 +21,7 @@ const jwt = require('jsonwebtoken'); // Import jsonwebtoken
 const User = require('./models/User'); // Import User model
 const Room = require('./models/Room'); // Import Room model
 const { v4: uuidv4 } = require('uuid');
-const roomController = require('./controllers/roomController'); // For handleUserLeaveRoomLogic
+const roomController = require('./controllers/roomController'); // For reusable logic
 const { Server } = require("socket.io");
 
 
@@ -408,10 +408,11 @@ io.on('connection', (socket) => {
               if (connectionRoomId) { // If it was a room-specific connection, update participants for that room
                 // Call the leave room logic
                 // We need the user's ID (socket.user._id) and the shareable room ID (connectionRoomId)
+                // Pass io to the logic function
                 if (socket.user && socket.user._id) {
                     roomController.handleUserLeaveRoomLogic(socket.user._id, connectionRoomId, io)
                         .then(result => console.log(`[SERVER IO] handleUserLeaveRoomLogic result for ${identifier} from room ${connectionRoomId}:`, result))
-                        .catch(err => console.error(`[SERVER IO] Error in handleUserLeaveRoomLogic for ${identifier} from room ${connectionRoomId}:`, err));
+                        .catch(err => console.error(`[SERVER IO] Uncaught error in handleUserLeaveRoomLogic for ${identifier} from room ${connectionRoomId}:`, err));
                 }
               }
             });
@@ -458,5 +459,13 @@ server.listen(PORT, () => {
   console.log(`Server listening on *:${PORT}`);
   
   // Schedule background jobs
-  scheduleRoomCleanup(); // <-- START THE ROOM CLEANUP JOB
+ // Modify scheduleRoomCleanup to pass io
+  scheduleRoomCleanup(io); // <-- START THE ROOM CLEANUP JOB, PASSING IO
+  
+});
+
+// Handle unhandled promise rejections (good practice)
+process.on('unhandledRejection', (err, promise) => {
+  console.error(`[SERVER] Unhandled Rejection: ${err.message}`, err);
+  // Optionally close server: server.close(() => process.exit(1));
 });
