@@ -1,0 +1,142 @@
+/* d:\WatchParty\client\src\components\room\RoomControls.css */
+
+.roomControlsContainer {
+  background-color: var(--background-secondary);
+  padding: var(--spacing-md);
+  margin: var(--spacing-md);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  color: var(--text-primary);
+}
+
+.roomControlsContainer h4 {
+  color: var(--accent-primary);
+  margin-top: 0;
+  margin-bottom: var(--spacing-lg);
+  text-align: left;
+  font-size: 1.25rem;
+}
+
+.controlError {
+  color: #cf6679; /* Material Dark Theme Error Color */
+  font-size: 0.9em;
+  margin-bottom: var(--spacing-sm);
+  text-align: left;
+}
+
+.inputGroup {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+}
+
+.videoUrlInput {
+  flex-grow: 1;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--input-background);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  color: var(--text-primary);
+  margin-right: var(--spacing-sm);
+  font-size: 0.9rem;
+}
+
+.videoUrlInput:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px var(--accent-primary-transparent, rgba(187, 134, 252, 0.3)); /* Add a transparent version of accent */
+}
+
+.videoUrlInput::placeholder {
+  color: var(--text-secondary);
+}
+
+.controlButton {
+  background-color: var(--accent-primary);
+  color: var(--background-primary); /* Text color for buttons with accent background */
+  border: none;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out, transform 0.1s ease;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px; /* Ensure icon buttons have some width */
+}
+
+.controlButton svg {
+  margin-right: var(--spacing-xs); /* Space between icon and text if any */
+  font-size: 1.1em; /* Slightly larger icons */
+}
+
+.controlButton:hover:not(:disabled) {
+  background-color: var(--accent-secondary);
+}
+
+.controlButton:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.controlButton:disabled {
+  background-color: var(--background-tertiary);
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+
+.playbackControls, .volumeControls {
+  margin-top: var(--spacing-md);
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+  flex-wrap: wrap; /* Allow controls to wrap on smaller screens */
+}
+
+.volumeSlider {
+  flex-grow: 1;
+  max-width: 150px; /* Limit slider width */
+  cursor: pointer;
+}
+
+.volumeLabel {
+  margin-right: var(--spacing-xs);
+}
+
+.volumePercentage {
+  margin-left: var(--spacing-xs);
+  min-width: 40px; /* To prevent layout shift */
+  text-align: right;
+}
+
+/* Basic Responsiveness */
+@media (max-width: 768px) { /* Tablet and below */
+  .inputGroup {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .videoUrlInput {
+    margin-right: 0;
+    margin-bottom: var(--spacing-sm);
+  }
+  .playbackControls {
+    justify-content: center; /* Center buttons on smaller screens */
+  }
+}
+
+@media (max-width: 480px) { /* Mobile */
+  .roomControlsContainer h4 {
+    font-size: 1.1rem;
+  }
+  .controlButton {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: 0.8rem;
+  }
+  .controlButton svg {
+    font-size: 1em;
+  }
+  .volumeSlider {
+    max-width: 120px;
+  }
+}

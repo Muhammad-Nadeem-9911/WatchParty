@@ -1,0 +1,128 @@
+/* d:\WatchParty\client\src\styles\Form.css */
+
+.formContainer {
+  background-color: var(--background-secondary);
+  padding: var(--spacing-lg);
+  margin: var(--spacing-xl) auto; /* More top/bottom margin, centered */
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  color: var(--text-primary);
+  max-width: 550px; /* Decent width for standard forms */
+  text-align: left;
+}
+
+.formContainer h2 {
+  color: var(--accent-primary);
+  margin-top: 0;
+  margin-bottom: var(--spacing-lg);
+  text-align: center;
+  font-size: 1.6rem;
+}
+
+.formGroup {
+  margin-bottom: var(--spacing-md);
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: var(--spacing-xs);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+.formInput {
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--input-background);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  color: var(--text-primary);
+  font-size: 1rem;
+  box-sizing: border-box; /* Ensure padding doesn't increase width */
+}
+
+.formInput:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px var(--accent-primary-transparent, rgba(187, 134, 252, 0.3));
+}
+
+.formInput::placeholder {
+  color: var(--text-secondary);
+}
+
+.formButton {
+  width: 100%;
+  background-color: var(--accent-primary);
+  color: var(--background-primary);
+  border: none;
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out, transform 0.1s ease;
+  font-size: 1rem;
+  font-weight: bold;
+  margin-top: var(--spacing-sm); /* Space above button */
+}
+
+.formButton:hover:not(:disabled) {
+  background-color: var(--accent-secondary);
+}
+
+.formButton:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.formButton:disabled {
+  background-color: var(--background-tertiary);
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+
+.formLink {
+  display: block;
+  text-align: center;
+  margin-top: var(--spacing-md);
+  color: var(--accent-secondary);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.formLink:hover {
+  text-decoration: underline;
+}
+
+.formError {
+  color: #cf6679; /* Material Dark Theme Error Color */
+  font-size: 0.9em;
+  margin-bottom: var(--spacing-md);
+  text-align: center;
+}
+
+.formSuccess {
+  color: var(--accent-secondary); /* Or a green color */
+  font-size: 0.9em;
+  margin-bottom: var(--spacing-md);
+  text-align: center;
+}
+
+/* For side-by-side layout on ProfilePage */
+.profileLayoutContainer {
+  display: flex;
+  gap: var(--spacing-lg); /* Space between the two sections */
+  align-items: flex-start; /* Align items to the top if they have different heights */
+}
+
+.profileLayoutContainer > .profileSection {
+  flex: 1; /* Each section takes equal space */
+  min-width: 0; /* Allow sections to shrink if needed */
+  margin-bottom: 0; /* Remove bottom margin as gap handles spacing */
+}
+
+@media (max-width: 992px) { /* Tablet and below, stack them */
+  .profileLayoutContainer {
+    flex-direction: column;
+  }
+}

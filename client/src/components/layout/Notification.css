@@ -1,0 +1,50 @@
+/* d:\WatchParty\client\src\components\layout\Notification.css */
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius);
+  color: var(--text-primary);
+  z-index: 1000;
+  min-width: 250px;
+  max-width: 400px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.notification p {
+  margin: 0;
+  margin-right: var(--spacing-md);
+}
+
+.notification-info {
+  background-color: var(--accent-primary);
+  color: var(--background-primary); /* Text color for info notifications */
+}
+
+.notification-success {
+  background-color: var(--accent-secondary); /* Or a green like #03DAC5 or #4CAF50 */
+  color: var(--background-primary);
+}
+
+.notification-error {
+  background-color: #CF6679; /* Material Dark Error */
+  color: var(--text-primary); /* Ensure contrast */
+}
+
+.notification-close-btn {
+  background: none;
+  border: none;
+  color: inherit; /* Inherits color from parent .notification-* */
+  font-size: 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 0 var(--spacing-xs);
+  line-height: 1;
+}
+.notification-close-btn:hover {
+  opacity: 0.7;
+}

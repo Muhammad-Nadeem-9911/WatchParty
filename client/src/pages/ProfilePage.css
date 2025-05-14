@@ -1,0 +1,63 @@
+/* Styles specific to ProfilePage sections */
+.profileSection {
+  background-color: var(--background-tertiary); /* Slightly different background for sections */
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius);
+  margin-bottom: var(--spacing-lg);
+  border: 1px solid var(--border-color);
+}
+
+.profileSection h3 {
+  color: var(--text-primary);
+  font-size: 1.2rem;
+  margin-top: 0;
+  margin-bottom: var(--spacing-md);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: var(--spacing-sm);
+}
+
+.profileSection h3 svg { /* Icon styling within h3 */
+  color: var(--accent-secondary); /* Use a secondary accent for section icons */
+  font-size: 1.1em; /* Relative to h3 font size */
+}
+
+.profilePageHr {
+  border: none;
+  height: 1px;
+  background-color: var(--border-color);
+  margin: var(--spacing-xl) 0; /* More prominent separator */
+}
+
+/* New wrapper for the entire Profile Page content */
+.profilePageWrapper {
+  padding: var(--spacing-lg); /* Consistent padding with other pages */
+  color: var(--text-primary);
+  /* This wrapper can be full width within its parent (.pageContent) */
+  /* Or set a max-width if you want the profile page itself to be constrained but wider than forms */
+  /* e.g., max-width: 1200px; margin: var(--spacing-xl) auto; */
+}
+
+/* Styling for ProfilePage main heading */
+.profilePageMainHeading {
+  text-align: left;
+  font-size: 1.8rem; /* Match dashboard header size */
+  color: var(--accent-primary);
+  margin-top: 0;
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
+}
+
+
+.formButton.deleteAccountButton {
+  background-color: #CF6679; /* Material Dark Error Color */
+  color: var(--text-primary); /* Ensure good contrast */
+  margin-top: var(--spacing-lg); /* Add space above it */
+}
+
+.formButton.deleteAccountButton:hover {
+  background-color: #b04858; /* Darker shade for hover */
+}

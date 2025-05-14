@@ -1,0 +1,102 @@
+/* d:\WatchParty\client\src\pages\RoomPage.css */
+
+.roomPageContainer {
+  display: flex;
+  flex-direction: column; /* Main direction for overall page content */
+  min-height: calc(100vh - 60px); /* Adjust 60px based on your navbar height */
+  padding: var(--spacing-sm); /* Small padding around the whole room page */
+  gap: var(--spacing-md);
+  background-color: var(--background-primary); /* Ensure page background is dark */
+}
+
+.roomPageHeader {
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-sm); /* Reduced margin as layout handles spacing */
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--background-secondary);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+  text-align: left;
+}
+
+.roomPageHeader h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--accent-primary);
+}
+
+.roomPageHeader p {
+  margin: var(--spacing-xs) 0 0;
+  font-size: 0.9em;
+  color: var(--text-secondary);
+}
+
+.roomLayout {
+  display: flex;
+  flex-grow: 1; /* Allows this section to take remaining vertical space */
+  gap: var(--spacing-md);
+  overflow: hidden; /* Prevent scrollbars on the layout itself if children manage their own */
+}
+
+.mainContent {
+  flex-grow: 3; /* Video player and controls take more space */
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  min-width: 0; /* Important for flex children to shrink properly */
+}
+
+.sidebar {
+  flex-grow: 1; /* Chat and participants take less space */
+  min-width: 280px; /* Minimum width for the sidebar */
+  max-width: 350px; /* Maximum width for the sidebar */
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  background-color: var(--background-tertiary); /* Slightly different bg for sidebar */
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+  overflow: hidden; /* Children will handle their own scroll */
+}
+
+/* Ensure child components within sidebar and mainContent stretch/scroll correctly */
+.mainContent > div, /* Direct children like VideoPlayerWrapper, RoomControls */
+.sidebar > div {    /* Direct children like ParticipantList, ChatWindow */
+  border-radius: var(--border-radius); /* Consistent border radius */
+  /* Individual components already have margin, so we might not need it here */
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) { /* Smaller desktops / Large tablets */
+  .roomLayout {
+    flex-direction: column;
+  }
+  .sidebar {
+    max-width: 100%; /* Allow sidebar to take full width when stacked */
+    min-width: 100%;
+    max-height: 50vh; /* Limit height when stacked, or make it scrollable */
+    flex-direction: row; /* Arrange chat and participants side-by-side */
+    overflow-x: auto; /* Allow horizontal scroll if content overflows */
+  }
+  .sidebar > div { /* ParticipantList and ChatWindow */
+    flex: 1; /* Make them share space equally */
+    min-width: 250px; /* Ensure they have some minimum width */
+  }
+}
+
+@media (max-width: 768px) { /* Tablets and mobiles */
+  .roomPageContainer {
+    padding: var(--spacing-xs);
+  }
+  .roomPageHeader h2 {
+    font-size: 1.3rem;
+  }
+  .sidebar {
+    flex-direction: column; /* Stack chat and participants again on smaller screens */
+    max-height: none; /* Remove max-height or adjust */
+  }
+   .sidebar > div {
+    min-width: auto; /* Reset min-width */
+  }
+}

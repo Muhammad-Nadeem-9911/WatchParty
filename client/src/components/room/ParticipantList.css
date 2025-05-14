@@ -1,0 +1,93 @@
+/* d:\WatchParty\client\src\components\room\ParticipantList.css */
+
+.participantListContainer {
+  background-color: var(--background-secondary);
+  padding: var(--spacing-md);
+  margin: var(--spacing-md);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  color: var(--text-primary);
+  max-height: 400px; /* Or a height appropriate for your layout */
+  display: flex;
+  flex-direction: column;
+}
+
+.participantListContainer h4 {
+  color: var(--accent-primary);
+  margin-top: 0;
+  margin-bottom: var(--spacing-md);
+  text-align: left;
+  font-size: 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: var(--spacing-sm);
+}
+
+.participantListContainer h4 .hostIndicator {
+  font-size: 0.8em;
+  color: var(--accent-secondary);
+  margin-left: var(--spacing-sm);
+  font-weight: normal;
+}
+
+.participantList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  overflow-y: auto; /* Allow scrolling if list is long */
+  flex-grow: 1;
+}
+
+.participantItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm) 0;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.95rem;
+}
+
+.participantItem:last-child {
+  border-bottom: none;
+}
+
+.participantName {
+  display: flex;
+  align-items: center;
+}
+
+.statusIcon {
+  margin-left: var(--spacing-sm);
+  font-size: 1.1em; /* Make icons slightly larger */
+}
+
+.hostIcon {
+  color: gold; /* Or var(--accent-primary) */
+}
+
+.controllerIcon {
+  color: var(--accent-secondary); /* Or cyan */
+}
+
+.controlToggleButton {
+  background-color: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+  font-size: 1.2em; /* Icon size */
+  line-height: 1; /* Ensure icon is centered */
+}
+
+.controlToggleButton:hover:not(:disabled) {
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
+}
+
+.controlToggleButton:disabled {
+  color: var(--text-disabled);
+  border-color: var(--text-disabled);
+  cursor: not-allowed;
+}

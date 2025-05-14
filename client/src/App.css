@@ -1,0 +1,222 @@
+/* d:\WatchParty\client\src\App.css */
+
+:root {
+  /* Dark Theme Palette */
+  --background-primary: #121212; /* Very dark grey, almost black */
+  --background-secondary: #1e1e1e; /* Dark grey for cards, modals */
+  --background-tertiary: #2a2a2a; /* Slightly lighter grey for elevated surfaces */
+
+  --text-primary: #e0e0e0; /* Light grey for primary text */
+  --text-secondary: #b3b3b3; /* Medium grey for secondary text */
+  --text-disabled: #757575; /* Grey for disabled text/icons */
+
+  --accent-primary: #bb86fc; /* Purple - Material Design dark theme primary */
+  --accent-secondary: #03dac6; /* Teal - Material Design dark theme secondary */
+
+  --border-color: #3a3a3a; /* Dark grey for borders */
+  --input-background: #2c2c2c; /* Background for input fields */
+
+  /* Spacing & Sizing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  --border-radius: 4px;
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-family);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--background-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+/* Basic reset for some elements */
+button, input, select, textarea {
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+/* General container styling (optional, adjust as needed for your App layout) */
+.App {
+/* text-align: center; Remove this if you want more control per page */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+
+  /* Navigation Bar Styling */
+.appNavbar {
+  background-color: var(--background-secondary);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  display: flex; /* Make the nav a flex container */
+  justify-content: space-between; /* Push children to ends */
+  align-items: center; /* Vertically align items */
+}
+
+.appNavbar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+
+}
+
+.appNavbar .navLinks { /* Group for left-aligned links */
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center; /* Align items nicely if logo has different height */
+}
+
+.navLogoLink {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: 1.2rem; /* Adjust as needed */
+  font-weight: bold;
+  color: var(--accent-primary); /* Or your brand color */
+  text-decoration: none;
+  padding: var(--spacing-xs) 0; /* Adjust padding if needed */
+}
+
+.navLogoIcon {
+  font-size: 1.5em; /* Make icon a bit larger than text */
+  /* color: var(--accent-primary); */ /* Inherits from navLogoLink or set specific */
+}
+.appNavbar li {
+  display: inline-block;
+}
+
+.userInfoDisplay { /* New wrapper for icon and name */
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius);
+  cursor: pointer; /* Make the whole area clickable to open dropdown */
+  transition: background-color 0.2s ease;
+}
+
+.userInfoDisplay:hover {
+  background-color: var(--background-tertiary);
+}
+
+.userMenuContainer {
+  position: relative;
+}
+
+.userIconButton {
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: 1.5rem; /* Slightly smaller icon if name is next to it */
+  cursor: pointer;
+  padding: 0; /* Remove padding if it's part of userInfoDisplay */
+  display: flex;
+  align-items: center;
+  justify-content: center;}
+
+.userNameDisplay {
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: 100%; /* Position below the icon */
+  right: 0;
+  background-color: var(--background-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  z-index: 100;
+  min-width: 180px;
+  padding: var(--spacing-sm) 0;
+}
+
+.dropdownMenuItem { /* New class for both Link and button */
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: var(--spacing-sm) var(--spacing-md);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex; /* For aligning icon and text */
+  align-items: center;
+  gap: var(--spacing-sm); /* Space between icon and text */
+  text-decoration: none; /* Ensure Link doesn't have underline by default */
+
+}
+
+.dropdownMenuItem:hover {
+  background-color: var(--background-tertiary);
+  color: var(--text-primary);
+}
+
+.dropdownItemIcon {
+  font-size: 1em; /* Adjust icon size relative to text */
+  color: var(--text-secondary); /* Default icon color */
+}
+
+.dropdownMenuItem:hover .dropdownItemIcon {
+  color: var(--text-primary); /* Icon color on hover */
+}
+
+.appNavbar a, .appNavbar button {
+  color: var(--text-secondary);
+  text-decoration: none;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius);
+  transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out;
+  font-size: 0.95rem;
+}
+
+.appNavbar a:hover, .appNavbar button:hover {
+  color: var(--text-primary);
+  background-color: var(--background-tertiary);
+}
+
+.appNavbar button {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* Styles for the combined Login/Signup button */
+.authActionDisplay {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  color: var(--text-primary); /* Match user name display color */
+  text-decoration: none; /* For Link component */
+}
+
+.authActionDisplay:hover {
+  background-color: var(--background-tertiary);
+}
+
+.pageContent {
+  flex-grow: 1;
+  padding: var(--spacing-md); /* Add some padding around page content */
+}

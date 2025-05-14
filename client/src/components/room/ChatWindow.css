@@ -1,0 +1,145 @@
+/* d:\WatchParty\client\src\components\room\ChatWindow.css */
+
+.chatWindowContainer {
+  background-color: var(--background-secondary);
+  padding: var(--spacing-md);
+  margin: var(--spacing-md);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  /* Set a height or make it flexible within its parent */
+  height: 400px; /* Example height, adjust as needed */
+}
+
+.chatWindowContainer h4 {
+  color: var(--accent-primary);
+  margin-top: 0;
+  margin-bottom: var(--spacing-md);
+  text-align: left;
+  font-size: 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: var(--spacing-sm);
+}
+
+.chatLog {
+  flex-grow: 1;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  background-color: var(--background-primary); /* Slightly different background for chat log */
+  margin-bottom: var(--spacing-md);
+  padding: var(--spacing-sm);
+  border-radius: var(--border-radius);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.chatMessage {
+  margin-bottom: var(--spacing-xs);
+  word-wrap: break-word; /* Ensure long messages wrap */
+}
+
+.chatMessage strong {
+  color: var(--accent-secondary); /* Highlight sender name */
+  margin-right: var(--spacing-xs);
+}
+
+.chatForm {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.chatInput {
+  flex-grow: 1;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--input-background);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.chatInput:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px var(--accent-primary-transparent, rgba(187, 134, 252, 0.3));
+}
+
+.chatInput::placeholder {
+  color: var(--text-secondary);
+}
+
+.sendButton {
+  background-color: var(--accent-primary);
+  color: var(--background-primary);
+  border: none;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out, transform 0.1s ease;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px; /* Ensure icon buttons have some width */
+}
+
+.sendButton svg {
+  font-size: 1.1em; /* Slightly larger icons */
+}
+
+.sendButton:hover:not(:disabled) {
+  background-color: var(--accent-secondary);
+}
+
+.sendButton:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.sendButton:disabled {
+  background-color: var(--background-tertiary);
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+
+/* Scrollbar styling for webkit browsers */
+.chatLog::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chatLog::-webkit-scrollbar-track {
+  background: var(--background-secondary);
+  border-radius: var(--border-radius);
+}
+
+.chatLog::-webkit-scrollbar-thumb {
+  background-color: var(--accent-primary);
+  border-radius: var(--border-radius);
+  border: 2px solid var(--background-secondary); /* Creates padding around thumb */
+}
+
+.chatLog::-webkit-scrollbar-thumb:hover {
+  background-color: var(--accent-secondary);
+}
+
+
+/* Basic Responsiveness */
+@media (max-width: 768px) { /* Tablet and below */
+  .chatWindowContainer {
+    height: 300px; /* Adjust height for smaller screens */
+  }
+}
+
+@media (max-width: 480px) { /* Mobile */
+  .chatWindowContainer h4 {
+    font-size: 1.1rem;
+  }
+  .chatInput, .sendButton {
+    font-size: 0.85rem;
+  }
+  .sendButton {
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+}
