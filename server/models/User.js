@@ -39,7 +39,18 @@ const UserSchema = new mongoose.Schema({
     type: Schema.Types.ObjectId,
     ref: 'Room',
     default: null,
-  }
+  },
+  // Fields for email verification
+  isEmailVerified: {
+    type: Boolean,
+    default: false,
+  },
+  emailVerificationToken: {
+    type: String,
+  },
+  emailVerificationTokenExpires: {
+    type: Date,
+  },
 });
 
 // Hash password before saving
