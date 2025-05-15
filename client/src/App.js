@@ -16,6 +16,8 @@ import './App.css';
 // import SignupPage from './pages/SignupPage';
 // const SignupPagePlaceholder = () => <h2>Signup Page (Placeholder)</h2>;
 import SignupPage from './pages/SignupPage'; // Import the SignupPage
+import VerifyEmailPage from './pages/VerifyEmailPage'; // Import VerifyEmailPage
+import ResendVerificationPage from './pages/ResendVerificationPage'; // Import ResendVerificationPage
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -166,6 +168,12 @@ function App() {
             <HomePage isLoggedIn={isLoggedIn} currentUser={currentUser} />
           </Route>            <Route path="/login">
               {isLoggedIn ? <Redirect to="/dashboard" /> : <LoginPage onLoginSuccess={handleLoginSuccess} />}
+            </Route>
+            <Route path="/verify-email/:token">
+              <VerifyEmailPage />
+            </Route>
+            <Route path="/resend-verification">
+              <ResendVerificationPage />
             </Route>
             <Route path="/signup">
               {isLoggedIn ? <Redirect to="/dashboard" /> : <SignupPage />}

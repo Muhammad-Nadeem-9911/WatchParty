@@ -1,0 +1,47 @@
+/* d:\WatchParty\client\src\styles\Verification.css */
+.verificationContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  text-align: center;
+}
+
+.spinner {
+  border: 5px solid #f3f3f3; /* Light grey */
+  border-top: 5px solid #3498db; /* Blue - or your theme's primary color */
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.verificationMessage {
+  font-size: 1.1em;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.verificationStatus {
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+
+.verificationStatus.success {
+  background-color: #e6ffed;
+  color: #006421;
+}
+
+.verificationStatus.error {
+  background-color: #ffe6e6;
+  color: #c00;
+}

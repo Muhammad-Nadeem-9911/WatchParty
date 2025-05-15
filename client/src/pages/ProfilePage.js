@@ -61,8 +61,8 @@ const ProfilePage = () => {
     // Only update if username has actually changed or if we decide to allow email updates later
     // For now, we only allow username update via this form
     if (userData.username === (JSON.parse(localStorage.getItem('watchPartyUser'))?.username || '')) {
-        return; // No change to username, do nothing
-    }
+        addNotification('No changes to username detected.', 'info');
+        return;    }
     setIsLoading(true);
 
     const token = localStorage.getItem('watchPartyToken');
@@ -88,10 +88,12 @@ const ProfilePage = () => {
       if (!response.ok || !result.success) {
         throw new Error(result.error || 'Failed to update profile');
       }
-      setSuccessMessage('Profile updated successfully!');
+      addNotification('Profile updated successfully!', 'success');
+      setSuccessMessage('Profile updated successfully!'); // Keep local success message if desired
       // Update local storage if username changed, so navbar updates on next App.js effect run or refresh
-      localStorage.setItem('watchPartyUser', JSON.stringify({ username: result.data.username }));
+      localStorage.setItem('watchPartyUser', JSON.stringify({ ...JSON.parse(localStorage.getItem('watchPartyUser')), username: result.data.username }));
     } catch (err) {
+      addNotification(err.message, 'error');
       setError(err.message);
     } finally {
       setIsLoading(false);
@@ -111,6 +113,7 @@ const ProfilePage = () => {
     const { currentPassword, newPassword, confirmNewPassword } = passwordFormData;
 
     if (newPassword !== confirmNewPassword) {
+      addNotification('New passwords do not match.', 'error');
       setError('New passwords do not match');
       setIsLoading(false);
       return;
@@ -118,7 +121,7 @@ const ProfilePage = () => {
 
     const token = localStorage.getItem('watchPartyToken');
     if (!token) {
-      setError('Not authorized. Please log in.');
+      addNotification('Not authorized. Please log in.', 'error');
       setIsLoading(false);
       return;
     }
@@ -134,10 +137,12 @@ const ProfilePage = () => {
       if (!response.ok || !result.success) {
         throw new Error(result.error || 'Failed to change password');
       }
-      setSuccessMessage('Password changed successfully!');
+      addNotification('Password changed successfully!', 'success');
+      setSuccessMessage('Password changed successfully!'); // Keep local success message if desired
       setPasswordFormData({ currentPassword: '', newPassword: '', confirmNewPassword: '' }); // Clear form
     } catch (err) {
       setError(err.message);
+      addNotification(err.message, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -154,7 +159,7 @@ const ProfilePage = () => {
 
     const token = localStorage.getItem('watchPartyToken');
     if (!token) {
-      setError('Not authorized. Please log in.');
+      addNotification('Not authorized. Please log in.', 'error');
       setIsLoading(false);
       return;
     }
@@ -167,20 +172,41 @@ const ProfilePage = () => {
           'Authorization': `Bearer ${token}`,
         },
       });
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || 'Failed to delete account');
+      if (response.ok) {
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.indexOf("application/json") !== -1) {
+          const result = await response.json(); // Now it's safer to parse
+          if (result.success) {
+            addNotification('Account deleted successfully.', 'success');
+            localStorage.removeItem('watchPartyToken');
+            localStorage.removeItem('watchPartyUser');
+            history.push('/'); 
+            window.location.reload(); 
+          } else {
+            // Backend responded with JSON but success: false
+            throw new Error(result.error || 'Failed to delete account (server error)');
+          }
+        } else {
+          // Response was OK, but not JSON. This is unusual for a successful DELETE.
+          const textResponse = await response.text();
+          console.error("Server responded with OK status but non-JSON content:", textResponse);
+          throw new Error('Account deletion status unclear: Server sent non-JSON response.');
+        }
+      } else {
+        // Response not OK (e.g., 400, 401, 403, 404, 500)
+        let errorMessage = `Failed to delete account. Status: ${response.status}`;
+        try {
+          // Try to parse error as JSON, as backend might send structured errors
+          const errorResult = await response.json(); // This might fail if HTML
+          errorMessage = errorResult.error || errorResult.message || errorMessage;
+        } catch (e) {
+          // If parsing error as JSON fails, it's likely HTML or plain text
+          const textResponse = await response.text(); // Get the HTML/text
+          console.error("Server returned non-JSON error. Response body:", textResponse); 
+          errorMessage = `Failed to delete account. Server returned an unexpected response (Status: ${response.status}). Check console for details.`;
+        }
+        throw new Error(errorMessage);
       }
-      addNotification('Account deleted successfully.', 'success');
-      // Logout user: clear local storage and redirect
-      localStorage.removeItem('watchPartyToken');
-      localStorage.removeItem('watchPartyUser');
-      // You might want to call a global logout function from App.js context if you have one
-      // to update isLoggedIn state in App.js immediately.
-      // For now, direct redirect and App.js useEffect should handle it on next load.
-      history.push('/'); // Redirect to home page
-      window.location.reload(); // Force a reload to ensure App.js re-evaluates login state
     } catch (err) {
       addNotification(err.message, 'error');
     } finally {
@@ -215,10 +241,10 @@ const ProfilePage = () => {
               <label htmlFor="email">Email:</label>
               <input className="formInput" type="email" id="email" name="email" value={userData.email} readOnly />
             </div>
-            <button type="submit" className="formButton">Save Changes</button>
+            <button type="submit" className="formButton" disabled={isLoading}>{isLoading ? 'Saving...' : 'Save Changes'}</button>
             {/* Add some space and then the delete button */}
-            <button type="button" onClick={openDeleteAccountModal} className="formButton deleteAccountButton">
-              Delete Account
+            <button type="button" onClick={openDeleteAccountModal} className="formButton deleteAccountButton" disabled={isLoading}>
+              {isLoading ? 'Processing...' : 'Delete Account'}
             </button>
           </form>
           )}
@@ -239,7 +265,7 @@ const ProfilePage = () => {
               <label htmlFor="confirmNewPassword">Confirm New Password:</label>
               <input className="formInput" type="password" id="confirmNewPassword" name="confirmNewPassword" value={passwordFormData.confirmNewPassword} onChange={handlePasswordChange} required />
             </div>
-            <button type="submit" className="formButton">Change Password</button>
+            <button type="submit" className="formButton" disabled={isLoading}>{isLoading ? 'Changing...' : 'Change Password'}</button>
           </form>
         </div>
       </div>
