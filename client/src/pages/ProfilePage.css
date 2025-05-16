@@ -53,11 +53,21 @@
 
 
 .formButton.deleteAccountButton {
-  background-color: #CF6679; /* Material Dark Error Color */
-  color: var(--text-primary); /* Ensure good contrast */
+  background-color: #e74c3c; /* A common red for destructive actions */
+  background-image: none; /* Remove any gradient */
+  border-color: #c0392b;
+  color: white; /* White text for better contrast on red */
   margin-top: var(--spacing-lg); /* Add space above it */
 }
 
 .formButton.deleteAccountButton:hover {
-  background-color: #b04858; /* Darker shade for hover */
+  background-color: #c0392b; /* Darker red on hover */
+  background-image: none; /* Ensure no gradient on hover */
+  border-color: #a93226;
+}
+
+.formButton.deleteAccountButton:disabled {
+  background-color: #f5b7b1; /* Lighter red when disabled */
+  border-color: #f1948a;
+  cursor: not-allowed;
 }

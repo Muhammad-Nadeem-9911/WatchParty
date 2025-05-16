@@ -46,7 +46,7 @@
 .formInput:focus {
   outline: none;
   border-color: var(--accent-primary);
-  box-shadow: 0 0 0 2px var(--accent-primary-transparent, rgba(187, 134, 252, 0.3));
+  box-shadow: 0 0 0 2px var(--accent-primary-transparent, rgba(255, 215, 0, 0.3)); /* Fallback to transparent gold */
 }
 
 .formInput::placeholder {
@@ -55,20 +55,22 @@
 
 .formButton {
   width: 100%;
-  background-color: var(--accent-primary);
-  color: var(--background-primary);
+  /* background-color: var(--accent-primary); */ /* Replaced by gradient */
+  background-image: var(--accent-gradient);
+  color: var(--button-text-on-gold, #000000);
   border: none;
   padding: var(--spacing-md);
   border-radius: var(--border-radius);
   cursor: pointer;
-  transition: background-color 0.2s ease-in-out, transform 0.1s ease;
+  transition: transform 0.1s ease; /* background-image change will be instant */
   font-size: 1rem;
   font-weight: bold;
   margin-top: var(--spacing-sm); /* Space above button */
 }
 
 .formButton:hover:not(:disabled) {
-  background-color: var(--accent-secondary);
+  /* background-color: var(--accent-secondary); */ /* Replaced by gradient */
+  background-image: var(--accent-gradient-hover);
 }
 
 .formButton:active:not(:disabled) {
@@ -95,7 +97,7 @@
 }
 
 .formError {
-  color: #cf6679; /* Material Dark Theme Error Color */
+  color: var(--accent-primary); /* Use main gold for error text, or a specific error-gold variable */
   font-size: 0.9em;
   margin-bottom: var(--spacing-md);
   text-align: center;
@@ -115,7 +117,7 @@
   align-items: flex-start; /* Align items to the top if they have different heights */
 }
 
-.profileLayoutContainer > .profileSection {
+.profileLayoutContainer > .profileSection { /* Corrected HTML entity */
   flex: 1; /* Each section takes equal space */
   min-width: 0; /* Allow sections to shrink if needed */
   margin-bottom: 0; /* Remove bottom margin as gap handles spacing */

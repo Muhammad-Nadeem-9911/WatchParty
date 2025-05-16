@@ -51,6 +51,12 @@ const UserSchema = new mongoose.Schema({
   emailVerificationTokenExpires: {
     type: Date,
   },
+  passwordResetToken: {
+    type: String,
+  },
+  passwordResetExpires: {
+    type: Date,
+  },
 });
 
 // Hash password before saving

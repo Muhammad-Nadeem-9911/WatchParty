@@ -76,6 +76,9 @@ const LoginPage = ({ onLoginSuccess }) => {
         <div className="formGroup"><label htmlFor="password">Password:</label><input className="formInput" type="password" name="password" id="password" value={password} onChange={handleChange} required /></div>
         <button type="submit" className="formButton" disabled={isSubmitting}>{isSubmitting ? 'Logging In...' : 'Log In'}</button>
       </form>
+      <div style={{ textAlign: 'center', marginTop: '10px' }}> {/* Added a div for better spacing/styling if needed */}
+        <Link to="/forgot-password" className="formLink">Forgot your password?</Link>
+      </div>
       <Link to="/signup" className="formLink">Don't have an account? Sign up here</Link>
     </div>  );
 };

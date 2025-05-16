@@ -30,6 +30,12 @@ connectDB();
 
 const app = express();
 
+// Simple request logger middleware
+app.use((req, res, next) => {
+  console.log(`[SERVER INCOMING REQUEST] ${req.method} ${req.originalUrl}`);
+  next();
+});
+
 // CORS Configuration
 const corsOptions = {
   origin: process.env.CORS_ORIGIN || 'http://localhost:3000', // Fallback for dev

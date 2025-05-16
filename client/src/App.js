@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Switch, Route, Link, Redirect, useHistory, useLocation } from 'react-router-dom';
 import HomePage from './pages/HomePage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage'; // Import the ForgotPasswordPage
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import CreateRoomPage from './pages/CreateRoomPage'; // Import the new page
 import RoomPage from './pages/RoomPage'; // Import the actual RoomPage
 import ProfilePage from './pages/ProfilePage'; // Import the ProfilePage
 import { NotificationProvider } from './contexts/NotificationContext'; // Import NotificationProvider
+import ResetPasswordPage from './pages/ResetPasswordPage'; // Import the ResetPasswordPage
 import Notification from './components/layout/Notification'; // Import Notification component
 import { FaUserCircle, FaUserEdit, FaSignOutAlt, FaPlayCircle } from 'react-icons/fa'; // Added FaBars, FaTimes for mobile menu
 
@@ -23,7 +25,6 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState(null); // To store user info like username
   const [authLoading, setAuthLoading] = useState(true); // New state for initial auth check
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const location = useLocation(); // Get current location
   const history = useHistory();
 
@@ -97,6 +98,7 @@ function App() {
     }
     };
 
+  // If still checking auth, show a loading indicator
   const handleLogout = () => {
     localStorage.removeItem('watchPartyToken');
     localStorage.removeItem('watchPartyUser');
@@ -105,8 +107,6 @@ function App() {
     // Redirect to home or login page after logout
     history.push('/login');
   };
-
-  // If still checking auth, show a loading indicator
   if (authLoading) {
     return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: 'var(--background-primary)', color: 'var(--text-primary)'}}>Loading application...</div>; // Or a proper spinner component
   }
@@ -136,24 +136,22 @@ function App() {
             )}
             {isLoggedIn && currentUser && (
               <li className="userMenuContainer">
-                <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="userInfoDisplay" title="User Menu">
+                <div className="userInfoDisplay" title="User Menu"> {/* Changed button to div */}
                   <FaUserCircle className="userIconButton" /> {/* Icon first */}
                   <span className="userNameDisplay"> {/* Username next */}
                     {currentUser.username}
                   </span>
-                </button>
-                {isDropdownOpen && (
-                  <div className="dropdownMenu">
-                    <Link to="/profile" onClick={() => setIsDropdownOpen(false)} className="dropdownMenuItem">
+                </div>
+                <div className="dropdownMenu"> {/* Removed conditional rendering */}
+                    <Link to="/profile" className="dropdownMenuItem"> {/* Removed onClick */}
                       <FaUserEdit className="dropdownItemIcon" /> Edit Profile
                     </Link>
                     <button 
-                      onClick={() => { handleLogout(); setIsDropdownOpen(false); }} 
+                      onClick={handleLogout} // Removed setIsDropdownOpen(false)
                       className="dropdownMenuItem">
                       <FaSignOutAlt className="dropdownItemIcon" /> Logout
                     </button>
-                  </div>
-                )}
+                </div> {/* Added missing closing div for dropdownMenu */}
               </li>
             )}
           </ul>
@@ -174,6 +172,13 @@ function App() {
             </Route>
             <Route path="/resend-verification">
               <ResendVerificationPage />
+            </Route>
+            {/* Password Reset Routes */}
+            <Route path="/forgot-password">
+              <ForgotPasswordPage />
+            </Route>
+            <Route path="/reset-password/:token">
+              <ResetPasswordPage />
             </Route>
             <Route path="/signup">
               {isLoggedIn ? <Redirect to="/dashboard" /> : <SignupPage />}

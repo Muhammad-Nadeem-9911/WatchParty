@@ -249,10 +249,10 @@ const DashboardPage = () => {
         } else {
           // User joined a new room. The /myroom fetch on next load or a specific "room_joined_details" event
           // would be needed to update `myRoom` state with the new room's full details.
-          // For now, this event primarily signals they are no longer in the *previous* room if `myRoom` was set.        }
+          // For now, this event primarily signals they are no longer in the *previous* room if `myRoom` was set.
+        } // Closes the else block
       }
     };
-  }
 
     socket.on('connect', handleConnect);
     socket.on('room_deleted', handleRoomDeleted);
@@ -340,58 +340,72 @@ const DashboardPage = () => {
   console.log('[DashboardPage RENDER] isLoading:', isLoading, 'currentUser:', currentUser?.username, 'myRoom:', myRoom?.name, 'userOwnedRoomId:', userOwnedRoomId, 'otherRooms count:', otherRooms.length);
   return (
     <div className="dashboardContainer">
-      <header className="dashboardHeader">
-        <h2>User Dashboard</h2>
-        <p>Welcome, {currentUser?.username || 'User'}! Manage your rooms and profile here.</p>
-      </header>
-
       {isLoading ? <p>Loading dashboard...</p> : (
-        <>
-          <div className="dashboardSection">
-            <h3 className="roomsSectionHeader">My Room</h3>
+        <div className="dashboardLayout"> {/* Optional: Add a wrapper if needed, but dashboardContainer is already flex */}
+          <div className="dashboardLeftPanel">
+            {/* Top-left: Dashboard Info */}
+            <div className="dashboardInfoSection">
+              <h1 className="dashboardMainHeading">Dashboard</h1>
+              <p className="dashboardDescription">
+                Welcome, {currentUser?.username || 'User'}! Manage your rooms and profile here. Create a new room or join existing ones.
+              </p>
+            </div>
+
+            {/* Bottom-left: My Room Section */}
+            <div className="myRoomsSection">
+              <h2 className="sectionHeader">My Room</h2>
             {/* Display "My Room" if they are currently in the room they created */}
             {myRoom && currentUser && userOwnedRoomId && myRoom._id.toString() === userOwnedRoomId && myRoom.createdBy._id === currentUser._id ? (              <div className="roomListItem myRoomItem">
                 <div>
                   <Link to={`/room/${myRoom.roomId}`} className="roomLink">{myRoom.name}</Link>
                   <span className="roomMeta">(Shareable ID: {myRoom.roomId})</span>
                 </div>
-                <button onClick={() => openDeleteConfirmModal(myRoom.roomId)} className="deleteRoomButton" title="Delete My Room">
+                {/* Delete button for the owned room */}
+                <button onClick={() => openDeleteConfirmModal(myRoom.roomId)} className="deleteRoomButton" title="End My Room">
                   <FaTrash /> Delete My Room
                 </button>
               </div>
             ) : (
               // If they are not in their created room, check if they still own one
               currentUser && userOwnedRoomId ? (
-                <div className="dashboardActions">
-                  <p>You own a room but are not currently in it. You must delete it to create a new one.</p>
-                  {/* Ideally, fetch details of this owned room to show its name and a delete button here */}
-                  {/* For now, just a message. A "Delete My Owned Room" button would go here. */}
+                <div className="dashboardActions"> {/* Use dashboardActions for layout */}
+                  <p className="dashboardDescription">You own a room but are not currently in it. You must end it to create a new one.</p>
+                  {/* TODO: Fetch and display details of the owned room here if needed */}
+                  {/* For now, just the message and potentially a delete button if you can delete without being in it */}
+                   {/* Example: <button onClick={() => openDeleteConfirmModal(userOwnedRoomId)} className="deleteRoomButton">End Owned Room</button> */}
                 </div>
               ) : (
-              <div className="dashboardActions">
-                <p>You haven't created a room, or you are not currently in it.</p>
+              <div className="dashboardActions"> {/* Use dashboardActions for layout */}
+                <p className="dashboardDescription">You haven't created a room yet.</p>
                 <Link to="/room/create" className="dashboardButton">
                   Create a New Room
                 </Link>
               </div>
               )
             )}
+            {/* Room list for My Room - currently only shows the single owned room if user is in it */}
+            {/* If you want to list ALL rooms the user has ever created, you'd fetch them here */}
+            {/* <ul className="roomList"> ... </ul> */}
           </div>
 
-          <div className="dashboardSection">
-            <h3 className="roomsSectionHeader">Other Rooms</h3>
+          </div> {/* End dashboardLeftPanel */}
+
+          <div className="dashboardRightPanel">
+            {/* Right Panel: Other Rooms Section */}
+            <div className="otherRoomsSection">
+              <h2 className="sectionHeader">Other Active Rooms</h2>
             {otherRooms.length > 0 ? (
               <ul className="roomList">
                 {otherRooms.map(room => (
                   <li key={room.roomId} className="roomListItem">
                     <div>
                       <span className="roomName">{room.name}</span>
-                      <span className="roomMeta">(Created by: {room.createdBy.username})</span>
+                      <span className="roomMeta">Created by: {room.createdBy.username}</span>
                     </div>
                     {/* Change Link to a button with onClick handler */}
-                    <button onClick={() => handleJoinRoom(room.roomId)} className="dashboardButton joinRoomButton">                      Join Room
+                    <button onClick={() => handleJoinRoom(room.roomId)} className="dashboardButton joinRoomButton">
+                      Join Room
                     </button>
-
                   </li>
                 ))}
               </ul>
@@ -399,7 +413,8 @@ const DashboardPage = () => {
               <p>No other rooms available to join at the moment.</p>
             )}
           </div>
-        </>
+          </div>
+        </div>
       )}
 
       <ConfirmModal

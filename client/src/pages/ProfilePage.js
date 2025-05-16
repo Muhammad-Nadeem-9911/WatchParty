@@ -61,7 +61,6 @@ const ProfilePage = () => {
     // Only update if username has actually changed or if we decide to allow email updates later
     // For now, we only allow username update via this form
     if (userData.username === (JSON.parse(localStorage.getItem('watchPartyUser'))?.username || '')) {
-        addNotification('No changes to username detected.', 'info');
         return;    }
     setIsLoading(true);
 
@@ -88,7 +87,6 @@ const ProfilePage = () => {
       if (!response.ok || !result.success) {
         throw new Error(result.error || 'Failed to update profile');
       }
-      addNotification('Profile updated successfully!', 'success');
       setSuccessMessage('Profile updated successfully!'); // Keep local success message if desired
       // Update local storage if username changed, so navbar updates on next App.js effect run or refresh
       localStorage.setItem('watchPartyUser', JSON.stringify({ ...JSON.parse(localStorage.getItem('watchPartyUser')), username: result.data.username }));
@@ -113,7 +111,6 @@ const ProfilePage = () => {
     const { currentPassword, newPassword, confirmNewPassword } = passwordFormData;
 
     if (newPassword !== confirmNewPassword) {
-      addNotification('New passwords do not match.', 'error');
       setError('New passwords do not match');
       setIsLoading(false);
       return;
@@ -121,7 +118,6 @@ const ProfilePage = () => {
 
     const token = localStorage.getItem('watchPartyToken');
     if (!token) {
-      addNotification('Not authorized. Please log in.', 'error');
       setIsLoading(false);
       return;
     }
@@ -137,7 +133,6 @@ const ProfilePage = () => {
       if (!response.ok || !result.success) {
         throw new Error(result.error || 'Failed to change password');
       }
-      addNotification('Password changed successfully!', 'success');
       setSuccessMessage('Password changed successfully!'); // Keep local success message if desired
       setPasswordFormData({ currentPassword: '', newPassword: '', confirmNewPassword: '' }); // Clear form
     } catch (err) {
@@ -159,7 +154,6 @@ const ProfilePage = () => {
 
     const token = localStorage.getItem('watchPartyToken');
     if (!token) {
-      addNotification('Not authorized. Please log in.', 'error');
       setIsLoading(false);
       return;
     }
@@ -177,7 +171,6 @@ const ProfilePage = () => {
         if (contentType && contentType.indexOf("application/json") !== -1) {
           const result = await response.json(); // Now it's safer to parse
           if (result.success) {
-            addNotification('Account deleted successfully.', 'success');
             localStorage.removeItem('watchPartyToken');
             localStorage.removeItem('watchPartyUser');
             history.push('/'); 
@@ -208,7 +201,6 @@ const ProfilePage = () => {
         throw new Error(errorMessage);
       }
     } catch (err) {
-      addNotification(err.message, 'error');
     } finally {
       setIsLoading(false);
     }

@@ -1,20 +1,40 @@
 /* d:\WatchParty\client\src\App.css */
 
 :root {
-  /* Dark Theme Palette */
+  /* Black & Golden Theme Palette */
   --background-primary: #121212; /* Very dark grey, almost black */
-  --background-secondary: #1e1e1e; /* Dark grey for cards, modals */
-  --background-tertiary: #2a2a2a; /* Slightly lighter grey for elevated surfaces */
+  --background-secondary: #1A1A1A; /* Darker grey for cards, modals */
+  --background-tertiary: #282828; /* Slightly lighter grey for elevated surfaces, hover states */
 
   --text-primary: #e0e0e0; /* Light grey for primary text */
-  --text-secondary: #b3b3b3; /* Medium grey for secondary text */
+  --text-secondary: #A0A0A0; /* Muted grey for secondary text, placeholders */
   --text-disabled: #757575; /* Grey for disabled text/icons */
 
-  --accent-primary: #bb86fc; /* Purple - Material Design dark theme primary */
-  --accent-secondary: #03dac6; /* Teal - Material Design dark theme secondary */
+  /* Enhanced Gold Palette */
+  --gold-light: #FFFABD; /* A very light, creamy gold for highlights */
+  --gold-main: #FFD700; /* Your current primary gold - classic and vibrant */
+  --gold-deep: #FDB813; /* A richer, slightly more orange gold for depth */
+  --gold-dark: #B8860B; /* Darker, muted gold for shadows, borders, or text */
 
-  --border-color: #3a3a3a; /* Dark grey for borders */
-  --input-background: #2c2c2c; /* Background for input fields */
+  --accent-primary: var(--gold-main); /* Main interactive gold color (can be flat or start of gradient) */
+  --accent-secondary: var(--gold-dark); /* Darker gold for hovers, secondary flat accents */
+  --button-text-on-gold: #000000; /* Black text for high contrast on golden buttons */
+  --gold-main-transparent: rgba(255, 215, 0, 0.5); /* Transparent version of main gold for glows/highlights */
+
+  /* Golden Gradients */
+  --accent-gradient: linear-gradient(135deg, var(--gold-deep) 0%, var(--gold-main) 60%, var(--gold-light) 100%);
+  --accent-gradient-hover: linear-gradient(135deg, var(--gold-dark) 0%, var(--gold-deep) 100%);
+
+  --border-color: #444444; /* Dark gray for borders, can also use var(--accent-secondary) for golden borders */
+  --input-background: #222222; /* Background for input fields, slightly distinct from secondary bg */
+  --accent-primary-transparent: rgba(255, 215, 0, 0.3); /* Transparent gold for focus rings, subtle backgrounds */
+
+  /* Notification/Status Backgrounds (Consistent with Verification.css and Form.css suggestions) */
+  --success-bg: #103010; /* Dark, subtly green */
+  --error-bg: #301010;   /* Dark, subtly red */
+  --info-bg: #102030;    /* Dark, subtly blue/neutral */
+  --warning-bg: #302010; /* Dark, subtly orange/yellow */
+
 
   /* Spacing & Sizing */
   --spacing-xs: 4px;
@@ -89,12 +109,19 @@ button, input, select, textarea {
   font-weight: bold;
   color: var(--accent-primary); /* Or your brand color */
   text-decoration: none;
-  padding: var(--spacing-xs) 0; /* Adjust padding if needed */
+  padding: var(--spacing-xs) var(--spacing-sm); /* Added some horizontal padding */
+  border-radius: var(--border-radius); /* Consistent rounding */
+  transition: color 0.2s ease-in-out, text-shadow 0.2s ease-in-out, background-color 0.2s ease-in-out;
 }
 
 .navLogoIcon {
   font-size: 1.5em; /* Make icon a bit larger than text */
   /* color: var(--accent-primary); */ /* Inherits from navLogoLink or set specific */
+}
+.navLogoLink:hover {
+  color: var(--gold-light); /* Brighter gold on hover */
+  text-shadow: 0 0 8px var(--gold-main-transparent); /* Subtle glow effect */
+  background-color: var(--background-tertiary); /* Subtle background highlight */
 }
 .appNavbar li {
   display: inline-block;
@@ -106,12 +133,17 @@ button, input, select, textarea {
   gap: var(--spacing-xs);
   padding: var(--spacing-xs) var(--spacing-sm);
   border-radius: var(--border-radius);
-  cursor: pointer; /* Make the whole area clickable to open dropdown */
+  cursor: default; /* Changed from pointer as it's hover-activated now */
   transition: background-color 0.2s ease;
 }
 
 .userInfoDisplay:hover {
   background-color: var(--background-tertiary);
+}
+
+.userInfoDisplay:hover .userIconButton,
+.userInfoDisplay:hover .userNameDisplay {
+  color: var(--accent-primary); /* Golden icon and name on hover */
 }
 
 .userMenuContainer {
@@ -122,17 +154,20 @@ button, input, select, textarea {
   background: none;
   border: none;
   color: var(--text-primary);
-  font-size: 1.5rem; /* Slightly smaller icon if name is next to it */
-  cursor: pointer;
+  font-size: 1.5rem;
+  /* cursor: pointer; Inherits from parent or not needed if hover */
   padding: 0; /* Remove padding if it's part of userInfoDisplay */
   display: flex;
   align-items: center;
-  justify-content: center;}
+  justify-content: center;
+  transition: color 0.2s ease; /* Smooth color transition */
+}
 
 .userNameDisplay {
   color: var(--text-primary);
   font-size: 0.9rem;
   font-weight: 500;
+  transition: color 0.2s ease; /* Smooth color transition */
 }
 
 .dropdownMenu {
@@ -146,6 +181,10 @@ button, input, select, textarea {
   z-index: 100;
   min-width: 180px;
   padding: var(--spacing-sm) 0;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px); /* Start slightly lower for a subtle animation */
+  transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out, transform 0.2s ease-in-out;
 }
 
 .dropdownMenuItem { /* New class for both Link and button */
@@ -166,17 +205,24 @@ button, input, select, textarea {
 }
 
 .dropdownMenuItem:hover {
-  background-color: var(--background-tertiary);
-  color: var(--text-primary);
+  background-color: var(--accent-primary-transparent); /* Golden transparent background */
+  color: var(--accent-primary); /* Golden text */
+}
+
+.userMenuContainer:hover .dropdownMenu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
 }
 
 .dropdownItemIcon {
   font-size: 1em; /* Adjust icon size relative to text */
   color: var(--text-secondary); /* Default icon color */
+  transition: color 0.2s ease-in-out;
 }
 
 .dropdownMenuItem:hover .dropdownItemIcon {
-  color: var(--text-primary); /* Icon color on hover */
+  color: var(--accent-primary); /* Golden icon on hover */
 }
 
 .appNavbar a, .appNavbar button {
@@ -189,7 +235,7 @@ button, input, select, textarea {
 }
 
 .appNavbar a:hover, .appNavbar button:hover {
-  color: var(--text-primary);
+  color: var(--accent-primary); /* Golden text on hover for general nav links */
   background-color: var(--background-tertiary);
 }
 
@@ -207,12 +253,13 @@ button, input, select, textarea {
   padding: var(--spacing-xs) var(--spacing-sm);
   border-radius: var(--border-radius);
   cursor: pointer;
-  transition: background-color 0.2s ease;
-  color: var(--text-primary); /* Match user name display color */
+  transition: background-color 0.2s ease, color 0.2s ease;
+  color: var(--text-secondary); /* Start with secondary text color */
   text-decoration: none; /* For Link component */
 }
 
 .authActionDisplay:hover {
+  color: var(--accent-primary); /* Golden text on hover */
   background-color: var(--background-tertiary);
 }
 

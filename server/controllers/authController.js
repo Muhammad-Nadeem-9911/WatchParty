@@ -125,6 +125,41 @@ const deletionConfirmationTemplate = (username) => `
   </html>
 `;
 
+const passwordResetEmailTemplate = (username, resetUrl) => `
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Password Reset Request - WatchParty</title>
+      <style>
+          body { font-family: sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #f4f4f4; }
+          .container { max-width: 600px; margin: 20px auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
+          .header { text-align: center; margin-bottom: 20px; }
+          .header h1 { color: #3498db; } /* Use your theme color */
+          .content { margin-bottom: 20px; }
+          .button { display: inline-block; background-color: #3498db; color: #ffffff !important; text-decoration: none; padding: 12px 25px; border-radius: 5px; font-size: 16px; margin-top: 15px; }
+          .button:hover { background-color: #2980b9; } /* Darker shade on hover */
+          .footer { text-align: center; font-size: 0.9em; color: #777; margin-top: 20px; }
+          .footer p { margin: 5px 0; }
+      </style>
+  </head>
+  <body>
+      <div class="container">
+          <div class="header"><h1>WatchParty</h1></div>
+          <div class="content">
+              <p>Hello ${username},</p>
+              <p>You recently requested to reset your password for your WatchParty account. Click the button below to reset it.</p>
+              <p style="text-align: center;"><a href="${resetUrl}" class="button">Reset Your Password</a></p>
+              <p>If you did not request a password reset, please ignore this email or contact support if you have concerns.</p>
+              <p>This link will expire in 10 minutes.</p>
+          </div>
+          <div class="footer"><p>&copy; ${new Date().getFullYear()} WatchParty. All rights reserved.</p></div>
+      </div>
+  </body>
+  </html>
+`;
+
 // @desc    Register a new user
 // @route   POST /api/auth/register
 // @access  Public
@@ -155,33 +190,46 @@ exports.registerUser = async (req, res, next) => {
 
     const emailVerificationTokenExpires = Date.now() + 10 * 60 * 1000; // Token valid for 10 minutes
 
-    // Create user
-    user = await User.create({
+    // Prepare user object in memory (don't save yet)
+    const newUser = new User({ // Use 'new User' to create an instance without saving
       username,
       email: lowercasedEmail,
       password,
       emailVerificationToken,
       emailVerificationTokenExpires,
       isEmailVerified: false, // Explicitly set to false
-    });    
-    console.log(`User ${username} registered successfully with email ${lowercasedEmail}.`);
-    // Send verification email
+    });
+
+    // Prepare verification email content
     const verificationUrl = `${FRONTEND_URL}/verify-email/${verificationToken}`;
     const message = `Please verify your email address by clicking the following link: \n\n ${verificationUrl} \n\nIf you did not create this account, please ignore this email.`;
 
-    await sendEmail({
-      to: user.email,
-      subject: 'WatchParty - Email Verification',
-      text: message, // Plain text fallback
-      html: verificationEmailTemplate(user.username, verificationUrl), // HTML version
-    });
+    // Attempt to send the email FIRST
+    try {
+      await sendEmail({
+        to: newUser.email,
+        subject: 'WatchParty - Email Verification',
+        text: message, // Plain text fallback
+        html: verificationEmailTemplate(newUser.username, verificationUrl), // HTML version
+      });
+      console.log(`Verification email sent to ${newUser.email}`);
+    } catch (emailError) {
+      console.error(`Failed to send verification email to ${newUser.email}:`, emailError);
+      // If email sending fails, do not save the user.
+      // Return a specific error message to the client.
+      return res.status(500).json({ success: false, error: 'Registration failed: Could not send verification email. Please try again later or contact support.' });
+    }
+
+    // If email sending was successful, now save the user to the database
+    await newUser.save();
+    console.log(`User ${username} (ID: ${newUser._id}) saved to database after successful email dispatch to ${lowercasedEmail}.`);
+
     res.status(201).json({ success: true, message: 'User registered successfully. Please check your email to verify your account.' });
   } catch (error) {
     console.error(`Registration error for ${email}:`, error);
     res.status(500).json({ success: false, error: error.message });
   }
 };
-
 // @desc    Authenticate user & get token (Login)
 // @route   POST /api/auth/login
 // @access  Public
@@ -415,5 +463,95 @@ exports.updatePassword = async (req, res, next) => {
     res.status(200).json({ success: true, message: 'Password updated successfully' });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// @desc    Request password reset
+// @route   POST /api/auth/forgot-password
+// @access  Public
+exports.forgotPassword = async (req, res, next) => {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ success: false, error: 'Please provide an email address.' });
+  }
+
+  try {
+    const user = await User.findOne({ email: email.toLowerCase() });
+
+    // To prevent user enumeration, always send a success-like response.
+    // Also, only allow password reset for verified accounts.
+    if (!user || !user.isEmailVerified) {
+      console.log(`Password reset request for non-existent or unverified email: ${email.toLowerCase()}`);
+      return res.status(200).json({ success: true, message: 'If an account with that email exists and is verified, a password reset link has been sent.' });
+    }
+
+    // Generate token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    user.passwordResetToken = crypto
+      .createHash('sha256')
+      .update(resetToken)
+      .digest('hex');
+    user.passwordResetExpires = Date.now() + 10 * 60 * 1000; // Token valid for 10 minutes
+
+    await user.save();
+
+    // Create reset URL
+    const resetUrl = `${FRONTEND_URL}/reset-password/${resetToken}`;
+    const message = `You are receiving this email because you (or someone else) has requested the reset of a password. Please click the link to reset your password: \n\n ${resetUrl} \n\nIf you did not request this, please ignore this email and your password will remain unchanged. This link will expire in 10 minutes.`;
+
+    await sendEmail({
+      to: user.email,
+      subject: 'WatchParty - Password Reset Request',
+      text: message,
+      html: passwordResetEmailTemplate(user.username, resetUrl),
+    });
+
+    console.log(`Password reset email sent to ${user.email}`);
+    res.status(200).json({ success: true, message: 'Password reset link has been sent to your email address.' });
+
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ success: false, error: 'Server error while processing password reset request.' });
+  }
+};
+
+// @desc    Reset password
+// @route   PUT /api/auth/reset-password/:resetToken
+// @access  Public
+exports.resetPassword = async (req, res, next) => {
+  const { resetToken } = req.params;
+  const { password } = req.body;
+
+  if (!password) {
+    return res.status(400).json({ success: false, error: 'Please provide a new password.' });
+  }
+
+  // Hash the token from the URL params to match the one stored in DB
+  const hashedToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+
+  try {
+    const user = await User.findOne({
+      passwordResetToken: hashedToken,
+      passwordResetExpires: { $gt: Date.now() }, // Check if token is not expired
+    });
+
+    if (!user) {
+      return res.status(400).json({ success: false, error: 'Invalid or expired password reset token.' });
+    }
+
+    // Set new password
+    user.password = password; // The pre-save hook in User model will hash this
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save();
+
+    // Optionally, log the user in directly or send a confirmation email
+    res.status(200).json({ success: true, message: 'Password has been reset successfully. You can now log in with your new password.' });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ success: false, error: 'Server error while resetting password.' });
   }
 };

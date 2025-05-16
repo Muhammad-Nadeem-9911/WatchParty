@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { registerUser, loginUser, getMe, updateUserDetails, updatePassword, deleteUserAccount, verifyEmail, resendVerificationEmail } = require('../controllers/authController'); // Added email verification functions
+const { registerUser, loginUser, getMe, updateUserDetails, updatePassword, deleteUserAccount, verifyEmail, resendVerificationEmail, forgotPassword, resetPassword } = require('../controllers/authController'); // Added email verification and password reset functions
 const { protect } = require('../middlewares/authMiddleware'); // Import protect middleware
 
 // @route   POST /api/auth/register
@@ -26,6 +26,12 @@ router.get('/verify-email/:token', verifyEmail);
 
 // @route   POST /api/auth/resend-verification
 router.post('/resend-verification', resendVerificationEmail);
+
+// @route   POST /api/auth/forgot-password
+router.post('/forgot-password', forgotPassword);
+
+// @route   PUT /api/auth/reset-password/:resetToken
+router.put('/reset-password/:resetToken', resetPassword);
 
 
 module.exports = router;

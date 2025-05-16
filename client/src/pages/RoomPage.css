@@ -128,20 +128,23 @@
   border-radius: 5px;
   cursor: pointer;
   font-weight: bold;
-  transition: background-color 0.2s ease-in-out, transform 0.1s ease;
+  transition: transform 0.1s ease, opacity 0.2s ease-in-out; /* Keep opacity transition if desired */
 }
 
 .leaveRoomButton {
-  background-color: #e74c3c; /* A professional red */
-  color: white;
+  /* background-color: #e74c3c; */ /* Replaced by gradient */
+  background-image: var(--accent-gradient);
+  color: var(--button-text-on-gold, #000000);
 }
 
 .endRoomButton {
-  background-color: #c0392b; /* A slightly darker red for distinction or primary action */
-  color: white;
+  /* background-color: #c0392b; */ /* Replaced by gradient */
+  background-image: var(--accent-gradient); /* Or use accent-gradient-hover for distinction if needed */
+  color: var(--button-text-on-gold, #000000);
 }
 
 .leaveRoomButton:hover, .endRoomButton:hover {
+  background-image: var(--accent-gradient-hover);
   opacity: 0.9;
   transform: translateY(-1px);
 }

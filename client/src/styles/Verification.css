@@ -1,6 +1,8 @@
 /* d:\WatchParty\client\src\styles\Verification.css */
 .verificationContainer {
   display: flex;
+  background-color: var(--background-primary, #000000); /* Assuming main black background */
+  color: var(--text-primary, #E0E0E0); /* Light text */
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -9,8 +11,8 @@
 }
 
 .spinner {
-  border: 5px solid #f3f3f3; /* Light grey */
-  border-top: 5px solid #3498db; /* Blue - or your theme's primary color */
+  border: 5px solid var(--background-tertiary, #333333); /* Darker gray for the track */
+  border-top: 5px solid var(--accent-primary, #FFD700); /* Golden for the spinner highlight */
   border-radius: 50%;
   width: 50px;
   height: 50px;
@@ -26,7 +28,7 @@
 .verificationMessage {
   font-size: 1.1em;
   margin-bottom: 15px;
-  color: #333;
+  color: var(--text-secondary, #A0A0A0); /* Muted text color */
 }
 
 .verificationStatus {
@@ -37,11 +39,13 @@
 }
 
 .verificationStatus.success {
-  background-color: #e6ffed;
-  color: #006421;
+  background-color: var(--success-bg, #104010); /* Dark green-ish background */
+  color: var(--accent-primary, #FFD700); /* Golden text for contrast and theme consistency */
+  border: 1px solid var(--accent-secondary, #B8860B); /* Optional: golden border */
 }
 
 .verificationStatus.error {
-  background-color: #ffe6e6;
-  color: #c00;
+  background-color: var(--error-bg, #401010); /* Dark red-ish background */
+  color: var(--accent-primary, #FFD700); /* Golden text */
+  border: 1px solid var(--accent-secondary, #B8860B); /* Optional: golden border */
 }
