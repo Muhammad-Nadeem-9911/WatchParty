@@ -221,3 +221,96 @@
   background-color: var(--bg-page);
   padding: var(--spacing-lg); /* Add some padding around the whole dashboard layout */
 }
+
+/* Styles for the "Other Active Rooms" section and its grid */
+.otherRoomsSection {
+    /* Removed min-height, will now stretch to fill dashboardRightPanel */
+    display: flex;
+    flex-direction: column; /* To stack header and grid */
+    flex-grow: 1; /* Allows this section to take available vertical space in dashboardRightPanel */
+    overflow: hidden; /* Prevents this section from growing beyond its flex parent due to content */
+                      /* and ensures the grid inside handles scrolling. min-height: 0; would also work. */
+}
+
+.otherRoomsGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 cards per row */
+    flex-grow: 1; /* Grid takes remaining space in otherRoomsSection */    
+    /* Removed fixed grid-template-rows. Height is now flexible. */
+    gap: 20px; /* This will be the 1% margin (approx) and also horizontal gap */
+    padding: 10px 0; /* Padding top/bottom for the grid container */
+    overflow-y: auto; /* Allow scrolling if content exceeds available height */
+}
+
+/* Ensure RoomCards within the otherRoomsGrid have a consistent height */
+/* This is important for predictable row heights when grid-template-rows is not fixed. */
+.otherRoomsGrid .roomCard { /* Assuming your RoomCard component has a root element with class "roomCard" */
+  height: 280px; /* Match the height used for .myRoomCardContainer .roomCard */
+  /* Add any other styles if cards in the grid need specific adjustments */
+}
+
+/* Styles for the "My Room" card container and its external button */
+.myRoomCardContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center card and button if section is wider */
+  gap: var(--spacing-md); /* Space between the card and the button below it */
+  /* If you want the card to be the same width as other cards: */
+  max-width: 280px; /* Should match the effective width of cards in the grid */
+  margin: 0 auto var(--spacing-lg) auto; /* Center container and add bottom margin */
+}
+
+.myRoomCardContainer .roomCard {
+  height: 280px; /* Explicitly set height to match cards in the grid */
+  width: 100%; /* Card takes full width of its container */
+}
+
+.myRoomEndButton {
+  /* Inherits styles from .deleteRoomButton defined earlier in this file */
+  width: 100%; /* Make the button take the full width of the .myRoomCardContainer */
+}
+
+/* Add these styles to d:\WatchParty\client\src\pages\DashboardPage.css */
+
+/* This is the new wrapper we added in the JSX */
+.myRoomContentArea {
+  min-height: 402px; /* Updated: RoomCard(280) + gap(16) + button(50) + container_margin_bottom(24) + area_padding(16+16) = 402px */
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Centers content vertically if it's smaller than min-height */
+  align-items: center;   /* Centers content horizontally */
+  padding: 1rem; /* Adds some internal spacing */
+  box-sizing: border-box; /* Ensures padding is included in min-height calculation */
+  width: 100%; /* Takes full width of its parent (.myRoomsSection) */
+  /* border: 1px dashed #ccc; */ /* Optional: for debugging the layout */
+}
+
+/* Styles for the container when the RoomCard is present */
+.myRoomContentArea .myRoomCardContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center the card and button within this container */
+  gap: 1rem; /* Space between RoomCard and the "End My Room" button */
+  width: 100%; /* Or set a max-width if you want the card to be narrower */
+}
+
+/* Styles for the .dashboardActions div when it's inside .myRoomContentArea */
+.myRoomContentArea .dashboardActions {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center text and button */
+  text-align: center; /* Ensure text within paragraphs is centered */
+  gap: 1rem; /* Space between message and button */
+  width: 100%; /* Take full width to allow proper centering */
+}
+
+/* Optional: If your .dashboardDescription has default margins you want to override when using gap */
+.myRoomContentArea .dashboardDescription {
+  margin-bottom: 0; 
+}
+
+/* Ensure the "End My Room" button inside the card container is styled appropriately */
+.myRoomCardContainer .myRoomEndButton {
+  /* Add any specific styling if needed, e.g., width */
+  /* width: auto; */ /* Or a specific width */
+}

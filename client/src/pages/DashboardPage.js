@@ -4,6 +4,7 @@ import './DashboardPage.css'; // Import the CSS file
 import { FaTrash } from 'react-icons/fa'; // Icon for delete button
 import { useNotification } from '../contexts/NotificationContext'; // Import useNotification
 import ConfirmModal from '../components/common/ConfirmModal'; // Import the modal
+import RoomCard from '../components/room/RoomCard'; // Import the new RoomCard component
 import io from 'socket.io-client'; // Import socket.io-client
 
 const DashboardPage = () => {
@@ -13,10 +14,12 @@ const DashboardPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
   const { addNotification } = useNotification();
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false); // Renamed for clarity
   const history = useHistory(); // Get history object for navigation
   const dashboardSocketRef = useRef(null); // Use useRef for the socket instance
   // No need for roomIdToDelete state if we are always deleting `myRoom`
+  const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
+  const [roomToJoin, setRoomToJoin] = useState(null); // Store { roomId, roomName }
 
   useEffect(() => {
     // This effect handles all initial data loading for the dashboard.
@@ -123,6 +126,7 @@ const DashboardPage = () => {
           console.log('[DashboardPage] Fetched /api/rooms. Status:', allRoomsResponse.status);
           if (allRoomsResponse.ok) {
             const allRoomsData = await allRoomsResponse.json();
+            console.log('[DashboardPage] Received other rooms data:', allRoomsData); // Log the data here
             const filteredRooms = allRoomsData.filter(r => {
               const isMyCreation = fetchedUser ? r.createdBy._id === fetchedUser._id : false;
               const isMyCurrentRoom = currentRoomDataForFiltering ? r._id === currentRoomDataForFiltering._id : false;
@@ -279,7 +283,7 @@ const DashboardPage = () => {
     };
   }, [currentUser, addNotification]); // Reworked dependencies, socket instance managed by ref
 
-  const handleJoinRoom = async (roomIdToJoin) => { // roomIdToJoin is the shareable UUID
+  const executeJoinRoom = async (roomIdToJoin, roomName) => { // Renamed to avoid conflict, added roomName for notification
     console.log(`[DashboardPage] Attempting to join room with shareable ID: ${roomIdToJoin}`);
     const token = localStorage.getItem('watchPartyToken');
     if (!token) {
@@ -298,18 +302,28 @@ const DashboardPage = () => {
       if (!response.ok) {
         throw new Error(data.message || `Failed to join room (status: ${response.status})`);
       }
-    // If successful, navigate to the room
-      addNotification(data.message || 'Successfully joined room!', 'success');
+      // If successful, navigate to the room
+      addNotification(data.message || `Successfully joined room: ${roomName}!`, 'success');
       history.push(`/room/${roomIdToJoin}`);
     } catch (err) {
       console.error(`[DashboardPage] Error joining room ${roomIdToJoin}:`, err);
       addNotification(err.message || 'Could not join room.', 'error');
+    } finally {
+      setIsJoinModalOpen(false); // Close modal regardless of outcome
+      setRoomToJoin(null);
     }
   };
 
+  // This function will be passed to RoomCard and will open the join confirmation modal
+  const initiateJoinRoom = (roomId, roomName) => {
+    setRoomToJoin({ roomId, roomName });
+    setIsJoinModalOpen(true);
+  };
+
+
   const handleConfirmDeleteMyRoom = async () => { // This function handles confirming deletion of MY room
     if (!myRoom || !myRoom.roomId) return; // myRoom.roomId is the shareable UUID
-    setIsModalOpen(false); // Close modal immediately
+    setIsDeleteModalOpen(false); // Close modal immediately
     try {
       const token = localStorage.getItem('watchPartyToken');
        const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
@@ -334,7 +348,7 @@ const DashboardPage = () => {
 
   const openDeleteConfirmModal = (roomId) => {
     // We will always delete `myRoom` if this modal is for it.
-    setIsModalOpen(true);
+    setIsDeleteModalOpen(true);
   };
   // Log the state right before rendering to understand what the UI will show
   console.log('[DashboardPage RENDER] isLoading:', isLoading, 'currentUser:', currentUser?.username, 'myRoom:', myRoom?.name, 'userOwnedRoomId:', userOwnedRoomId, 'otherRooms count:', otherRooms.length);
@@ -354,39 +368,38 @@ const DashboardPage = () => {
             {/* Bottom-left: My Room Section */}
             <div className="myRoomsSection">
               <h2 className="sectionHeader">My Room</h2>
-            {/* Display "My Room" if they are currently in the room they created */}
-            {myRoom && currentUser && userOwnedRoomId && myRoom._id.toString() === userOwnedRoomId && myRoom.createdBy._id === currentUser._id ? (              <div className="roomListItem myRoomItem">
-                <div>
-                  <Link to={`/room/${myRoom.roomId}`} className="roomLink">{myRoom.name}</Link>
-                  <span className="roomMeta">(Shareable ID: {myRoom.roomId})</span>
-                </div>
-                {/* Delete button for the owned room */}
-                <button onClick={() => openDeleteConfirmModal(myRoom.roomId)} className="deleteRoomButton" title="End My Room">
-                  <FaTrash /> Delete My Room
-                </button>
-              </div>
-            ) : (
-              // If they are not in their created room, check if they still own one
-              currentUser && userOwnedRoomId ? (
-                <div className="dashboardActions"> {/* Use dashboardActions for layout */}
-                  <p className="dashboardDescription">You own a room but are not currently in it. You must end it to create a new one.</p>
-                  {/* TODO: Fetch and display details of the owned room here if needed */}
-                  {/* For now, just the message and potentially a delete button if you can delete without being in it */}
-                   {/* Example: <button onClick={() => openDeleteConfirmModal(userOwnedRoomId)} className="deleteRoomButton">End Owned Room</button> */}
-                </div>
-              ) : (
-              <div className="dashboardActions"> {/* Use dashboardActions for layout */}
-                <p className="dashboardDescription">You haven't created a room yet.</p>
-                <Link to="/room/create" className="dashboardButton">
-                  Create a New Room
-                </Link>
-              </div>
-              )
-            )}
-            {/* Room list for My Room - currently only shows the single owned room if user is in it */}
-            {/* If you want to list ALL rooms the user has ever created, you'd fetch them here */}
-            {/* <ul className="roomList"> ... </ul> */}
-          </div>
+              <div className="myRoomContentArea"> {/* Added wrapper for consistent height */}
+                {/* Display "My Room" if they are currently in the room they created */}
+                {myRoom && currentUser && userOwnedRoomId && myRoom._id.toString() === userOwnedRoomId && myRoom.createdBy._id === currentUser._id ? (
+                  <div className="myRoomCardContainer">
+                    <RoomCard room={myRoom} isMyRoom={true} onJoinRoom={() => initiateJoinRoom(myRoom.roomId, myRoom.name)} />
+                    <button onClick={() => openDeleteConfirmModal(myRoom.roomId)} className="deleteRoomButton myRoomEndButton" title="End My Room">
+                      <FaTrash /> End My Room
+                    </button>
+                  </div>
+                ) : (
+                  // If they are not in their created room, check if they still own one
+                  currentUser && userOwnedRoomId ? (
+                    <div className="dashboardActions"> {/* Use dashboardActions for layout */}
+                      <p className="dashboardDescription">You own a room but are not currently in it. You must end it to create a new one.</p>
+                      {/* TODO: Fetch and display details of the owned room here if needed */}
+                      {/* For now, just the message and potentially a delete button if you can delete without being in it */}
+                       {/* Example: <button onClick={() => openDeleteConfirmModal(userOwnedRoomId)} className="deleteRoomButton">End Owned Room</button> */}
+                    </div>
+                  ) : (
+                  <div className="dashboardActions"> {/* Use dashboardActions for layout */}
+                    <p className="dashboardDescription">You haven't created a room yet.</p>
+                    <Link to="/room/create" className="dashboardButton">
+                      Create a New Room
+                    </Link>
+                  </div>
+                  )
+                )}
+              </div> {/* End of myRoomContentArea */}
+              {/* Room list for My Room - currently only shows the single owned room if user is in it */}
+              {/* If you want to list ALL rooms the user has ever created, you'd fetch them here */}
+              {/* <ul className="roomList"> ... </ul> */}
+            </div>
 
           </div> {/* End dashboardLeftPanel */}
 
@@ -395,20 +408,13 @@ const DashboardPage = () => {
             <div className="otherRoomsSection">
               <h2 className="sectionHeader">Other Active Rooms</h2>
             {otherRooms.length > 0 ? (
-              <ul className="roomList">
+              <div className="otherRoomsGrid"> {/* Use a grid or flex container for cards */}
                 {otherRooms.map(room => (
-                  <li key={room.roomId} className="roomListItem">
-                    <div>
-                      <span className="roomName">{room.name}</span>
-                      <span className="roomMeta">Created by: {room.createdBy.username}</span>
-                    </div>
-                    {/* Change Link to a button with onClick handler */}
-                    <button onClick={() => handleJoinRoom(room.roomId)} className="dashboardButton joinRoomButton">
-                      Join Room
-                    </button>
-                  </li>
+                  // Render RoomCard for other rooms
+                  // Pass the room data and the join handler
+                  <RoomCard key={room.roomId} room={room} isMyRoom={false} onJoinRoom={() => initiateJoinRoom(room.roomId, room.name)} />
                 ))}
-              </ul>
+              </div>
             ) : (
               <p>No other rooms available to join at the moment.</p>
             )}
@@ -418,12 +424,22 @@ const DashboardPage = () => {
       )}
 
       <ConfirmModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleConfirmDeleteMyRoom}
-        title="Delete My Room"
+        title="End My Room" // Changed title to End My Room
         message={`Are you sure you want to delete your room? This action cannot be undone.`}
         confirmText="Yes, Delete It"
+        cancelText="Cancel"
+      />
+
+      <ConfirmModal
+        isOpen={isJoinModalOpen}
+        onClose={() => { setIsJoinModalOpen(false); setRoomToJoin(null); }}
+        onConfirm={() => roomToJoin && executeJoinRoom(roomToJoin.roomId, roomToJoin.roomName)}
+        title="Join Room"
+        message={`Are you sure you want to join the room "${roomToJoin?.roomName || 'this room'}"?`}
+        confirmText="Yes, Join"
         cancelText="Cancel"
       />
     </div>
