@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react'; // Import useRef
+import React, { useState, useEffect, useRef, useMemo } from 'react'; // Import useRef and useMemo
 import { Link, useHistory } from 'react-router-dom'; // Import Link and useHistory for navigation
 import './DashboardPage.css'; // Import the CSS file
 import { FaTrash } from 'react-icons/fa'; // Icon for delete button
 import { useNotification } from '../contexts/NotificationContext'; // Import useNotification
-import ConfirmModal from '../components/common/ConfirmModal'; // Import the modal
+import ConfirmModal from '../components/common/ConfirmModal'; // Import the modal // Make sure this path is correct
 import RoomCard from '../components/room/RoomCard'; // Import the new RoomCard component
 import io from 'socket.io-client'; // Import socket.io-client
 
@@ -21,6 +21,9 @@ const DashboardPage = () => {
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const [roomToJoin, setRoomToJoin] = useState(null); // Store { roomId, roomName }
 
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortOrder, setSortOrder] = useState('newest'); // Default sort: newest, oldest, name_asc, name_desc
+
   useEffect(() => {
     // This effect handles all initial data loading for the dashboard.
     let isMounted = true;
@@ -29,7 +32,6 @@ const DashboardPage = () => {
     const fetchInitialDashboardData = async () => {
       const token = localStorage.getItem('watchPartyToken');
       if (!token) {
-        console.log('[DashboardPage] No token found. Setting loading to false.');
         if (isMounted) {
           setCurrentUser(null);
           setMyRoom(null);
@@ -52,7 +54,6 @@ const DashboardPage = () => {
           fetchedUser = result.data;
           if (isMounted) setCurrentUser(fetchedUser);
         } else {
-          console.log('[DashboardPage] User fetch failed (not ok). Setting loading to false.');
           console.error("Failed to fetch current user, response not ok:", userResponse.status);
           if (isMounted) {
             localStorage.removeItem('watchPartyToken');
@@ -67,7 +68,6 @@ const DashboardPage = () => {
         }
       } catch (err) {
         console.error("Error fetching current user:", err);
-        console.log('[DashboardPage] User fetch error. Setting loading to false.');
         if (isMounted) {
           localStorage.removeItem('watchPartyToken');
           localStorage.removeItem('watchPartyUser');
@@ -81,7 +81,6 @@ const DashboardPage = () => {
 
       // Crucial check: if fetchedUser is null/undefined after API call, stop and set loading false.
       if (!fetchedUser) {
-        console.log('[DashboardPage] fetchedUser is null after API call (e.g., token valid, but no user data). Setting loading to false.');
         if (isMounted) setIsLoading(false);
         return;
       }
@@ -91,12 +90,10 @@ const DashboardPage = () => {
         const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
         let currentRoomDataForFiltering = null; // For filtering otherRooms
         try {
-          console.log('[DashboardPage] Attempting to fetch /api/rooms/myroom...');
           // Fetch my current room
           const myRoomResponse = await fetch(`${apiUrl}/api/rooms/myroom`, {
             headers: { 'Authorization': `Bearer ${token}` },
           });
-          console.log('[DashboardPage] Fetched /api/rooms/myroom. Status:', myRoomResponse.status);
           if (myRoomResponse.ok) {
             const myRoomResult = await myRoomResponse.json();
             if (isMounted) setUserOwnedRoomId(myRoomResult.createdRoomId); // Store the ID of the room they own
@@ -118,15 +115,12 @@ const DashboardPage = () => {
             if (isMounted) setMyRoom(null);
           }
 
-          console.log('[DashboardPage] Attempting to fetch /api/rooms...');
           // Fetch all rooms for "other rooms" section
           const allRoomsResponse = await fetch(`${apiUrl}/api/rooms`, {
             headers: { 'Authorization': `Bearer ${token}` },
           });
-          console.log('[DashboardPage] Fetched /api/rooms. Status:', allRoomsResponse.status);
           if (allRoomsResponse.ok) {
             const allRoomsData = await allRoomsResponse.json();
-            console.log('[DashboardPage] Received other rooms data:', allRoomsData); // Log the data here
             const filteredRooms = allRoomsData.filter(r => {
               const isMyCreation = fetchedUser ? r.createdBy._id === fetchedUser._id : false;
               const isMyCurrentRoom = currentRoomDataForFiltering ? r._id === currentRoomDataForFiltering._id : false;
@@ -141,11 +135,9 @@ const DashboardPage = () => {
           console.error('Error fetching dashboard room data:', dashboardError);
           if (isMounted) addNotification('Could not load dashboard room data.', 'error');
         } finally {
-          console.log('[DashboardPage] Room data fetch sequence finished. Setting loading to false.');
           if (isMounted) setIsLoading(false); // All initial data fetching attempts are done
         }
       } else if (isMounted) { // Case: fetchedUser was valid, but we didn't proceed to room fetch (e.g. isMounted became false, though unlikely here)
-        console.log('[DashboardPage] fetchedUser was valid, but not proceeding to room fetch. Setting loading to false.');
         setIsLoading(false);
       }
     }; // end of fetchInitialDashboardData
@@ -155,6 +147,39 @@ const DashboardPage = () => {
       isMounted = false;
     };
   }, [addNotification]); // Runs once on mount (addNotification is stable)
+
+  const filteredAndSortedRooms = useMemo(() => {
+    if (!otherRooms) return [];
+    let roomsToProcess = [...otherRooms];
+
+    // Filtering
+    if (searchTerm.trim()) {
+      const lowerSearchTerm = searchTerm.toLowerCase();
+      roomsToProcess = roomsToProcess.filter(room =>
+        room.name.toLowerCase().includes(lowerSearchTerm) ||
+        (room.description && room.description.toLowerCase().includes(lowerSearchTerm)) // Assuming rooms might have a description
+      );
+    }
+
+    // Sorting
+    switch (sortOrder) {
+      case 'newest':
+        roomsToProcess.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        break;
+      case 'oldest':
+        roomsToProcess.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+        break;
+      case 'name_asc':
+        roomsToProcess.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case 'name_desc':
+        roomsToProcess.sort((a, b) => b.name.localeCompare(a.name));
+        break;
+      default:
+        break;
+    }
+    return roomsToProcess;
+  }, [otherRooms, searchTerm, sortOrder]);
 
   // Effect to check for room ended by host message
   useEffect(() => {
@@ -176,7 +201,6 @@ const DashboardPage = () => {
     // If socket exists but conditions are no longer met, disconnect it.
       if (dashboardSocketRef.current) {        
         console.log('[DashboardPage] No token or currentUser, disconnecting existing dashboard socket.');
-        dashboardSocketRef.current.disconnect();
         dashboardSocketRef.current = null; // Clear the ref
 
       }
@@ -185,7 +209,6 @@ const DashboardPage = () => {
 
     // Condition to create socket: token and currentUser exist, AND no socket exists in the ref.
     if (!dashboardSocketRef.current) {
-      console.log('[DashboardPage] Token and currentUser exist, creating new dashboard socket.');
       const newSocketInstance = io(process.env.REACT_APP_API_URL || 'http://localhost:3001', {
         query: { token } // Send token for authentication of this general socket
       });
@@ -195,14 +218,12 @@ const DashboardPage = () => {
 
     // At this point, dashboardSocketRef.current should hold a valid socket instance.
     const socket = dashboardSocketRef.current; // Use the instance from the ref
-    console.log('[DashboardPage] Attaching listeners to dashboard socket:', socket.id);
 
     const handleConnect = () => {
-      console.log('[DashboardPage] General dashboard socket connected:', socket.id);
+      // console.log('[DashboardPage] General dashboard socket connected:', socket.id); // Example of a log you might keep for specific debugging
     };
 
     const handleRoomDeleted = ({ roomId: deletedRoomId }) => {
-      console.log('[DashboardPage] Received room_deleted event for roomId:', deletedRoomId);
       // Update myRoom state - check if the deleted room was the one I created
       // Also check if the deleted room was the one the user owned
       setMyRoom(prevMyRoom => {
@@ -222,7 +243,6 @@ const DashboardPage = () => {
     };
 
     const handleRoomCreated = (newlyCreatedRoom) => {
-      console.log('[DashboardPage] Received room_created event:', newlyCreatedRoom);
       // Check if the current user created this room (currentUser is from state, captured by effect closure)
       if (currentUser && newlyCreatedRoom.createdBy._id === currentUser._id) {
         // If it's my room, set it as myRoom
@@ -237,7 +257,6 @@ const DashboardPage = () => {
     };
 
         const handleUserRoomStatusChanged = ({ userId: changedUserId, currentRoomId: newCurrentRoomId }) => {
-      console.log(`[DashboardPage] Received user_room_status_changed for user ${changedUserId}, new currentRoomId: ${newCurrentRoomId}`);
       if (currentUser && currentUser._id === changedUserId) {
         // This is an update for the currently logged-in user
         if (!newCurrentRoomId) {
@@ -266,7 +285,6 @@ const DashboardPage = () => {
 
     // Cleanup function: Remove listeners and disconnect socket when dependencies change or component unmounts.
     return () => {
-      console.log('[DashboardPage] Cleaning up listeners and potentially disconnecting socket:', socket.id);
       if (socket) { // Ensure socket exists before trying to call methods on it
         socket.off('connect', handleConnect);
         socket.off('room_deleted', handleRoomDeleted);
@@ -284,7 +302,6 @@ const DashboardPage = () => {
   }, [currentUser, addNotification]); // Reworked dependencies, socket instance managed by ref
 
   const executeJoinRoom = async (roomIdToJoin, roomName) => { // Renamed to avoid conflict, added roomName for notification
-    console.log(`[DashboardPage] Attempting to join room with shareable ID: ${roomIdToJoin}`);
     const token = localStorage.getItem('watchPartyToken');
     if (!token) {
       addNotification('You must be logged in to join a room.', 'error');
@@ -351,7 +368,6 @@ const DashboardPage = () => {
     setIsDeleteModalOpen(true);
   };
   // Log the state right before rendering to understand what the UI will show
-  console.log('[DashboardPage RENDER] isLoading:', isLoading, 'currentUser:', currentUser?.username, 'myRoom:', myRoom?.name, 'userOwnedRoomId:', userOwnedRoomId, 'otherRooms count:', otherRooms.length);
   return (
     <div className="dashboardContainer">
       {isLoading ? <p>Loading dashboard...</p> : (
@@ -407,17 +423,36 @@ const DashboardPage = () => {
             {/* Right Panel: Other Rooms Section */}
             <div className="otherRoomsSection">
               <h2 className="sectionHeader">Other Active Rooms</h2>
-            {otherRooms.length > 0 ? (
-              <div className="otherRoomsGrid"> {/* Use a grid or flex container for cards */}
-                {otherRooms.map(room => (
-                  // Render RoomCard for other rooms
-                  // Pass the room data and the join handler
-                  <RoomCard key={room.roomId} room={room} isMyRoom={false} onJoinRoom={() => initiateJoinRoom(room.roomId, room.name)} />
-                ))}
+             <div className="roomFilters">
+                <input
+                  type="text"
+                  placeholder="Search rooms by name or description..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="searchInput"
+                />
+                <select
+                  value={sortOrder}
+                  onChange={(e) => setSortOrder(e.target.value)}
+                  className="sortSelect"
+                >
+                  <option value="newest">Newest First</option>
+                  <option value="oldest">Oldest First</option>
+                  <option value="name_asc">Name (A-Z)</option>
+                  <option value="name_desc">Name (Z-A)</option>
+                </select>
               </div>
-            ) : (
-              <p>No other rooms available to join at the moment.</p>
-            )}
+              <div className="otherRoomsGrid">
+                {filteredAndSortedRooms.length > 0 ? (
+                  filteredAndSortedRooms.map(room => (
+                    <RoomCard key={room.roomId} room={room} isMyRoom={false} onJoinRoom={() => initiateJoinRoom(room.roomId, room.name)} />
+                  ))
+                ) : (
+                  <p className="dashboardDescription noRoomsMessage">
+                    {searchTerm ? "No rooms match your search criteria." : "No other active rooms available right now."}
+                  </p>
+                )}
+              </div>
           </div>
           </div>
         </div>

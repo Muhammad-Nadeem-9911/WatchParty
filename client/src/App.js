@@ -128,7 +128,6 @@ function App() {
             {!isLoggedIn && (
               <li>
                 <Link to="/login" className="authActionDisplay" title="Login or Signup">
-                  <FaUserCircle className="userIconButton" /> {/* Re-use userIconButton for size consistency */}
                   <span className="userNameDisplay">Login / Signup</span> {/* Re-use userNameDisplay for style consistency */}
                 </Link>
               </li>

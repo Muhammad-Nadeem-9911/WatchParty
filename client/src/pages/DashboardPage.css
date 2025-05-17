@@ -222,6 +222,45 @@
   padding: var(--spacing-lg); /* Add some padding around the whole dashboard layout */
 }
 
+/* Styles for Room Filters (Search and Sort) */
+.roomFilters {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md); /* Space below filters, before the grid */
+  align-items: center;
+}
+
+.searchInput {
+  flex-grow: 1; /* Search input takes available space */
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background-color: var(--bg-card-alt); /* Consistent with other input-like areas */
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  outline: none; /* Remove default outline */
+}
+
+.searchInput:focus {
+  border-color: var(--accent-primary); /* Highlight on focus */
+  box-shadow: 0 0 0 2px rgba(var(--accent-primary), 0.2); /* Optional: soft glow */
+}
+
+.searchInput::placeholder {
+  color: var(--text-muted);
+}
+
+.sortSelect {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background-color: var(--bg-card-alt);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  cursor: pointer;
+  outline: none;
+}
+
 /* Styles for the "Other Active Rooms" section and its grid */
 .otherRoomsSection {
     /* Removed min-height, will now stretch to fill dashboardRightPanel */
@@ -247,6 +286,13 @@
 .otherRoomsGrid .roomCard { /* Assuming your RoomCard component has a root element with class "roomCard" */
   height: 280px; /* Match the height used for .myRoomCardContainer .roomCard */
   /* Add any other styles if cards in the grid need specific adjustments */
+}
+
+/* Message when no rooms are found/available in the grid */
+.otherRoomsGrid .noRoomsMessage {
+  grid-column: 1 / -1; /* Make the message span all columns if grid is empty */
+  text-align: center;
+  padding: var(--spacing-xl) 0; /* Add some padding to center it visually */
 }
 
 /* Styles for the "My Room" card container and its external button */

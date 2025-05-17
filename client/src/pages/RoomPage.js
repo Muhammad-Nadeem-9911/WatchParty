@@ -39,7 +39,6 @@ const RoomPage = ({ currentUser }) => { // Accept currentUser as a prop
         });
         if (response.ok) {
           const data = await response.json();
-          console.log('[RoomPage] Fetched room details:', data); // Log fetched data
           if (data.host && data.host._id) {
             setRoomHostId(data.host._id);
           } else {
@@ -102,25 +101,17 @@ const RoomPage = ({ currentUser }) => { // Accept currentUser as a prop
   useEffect(() => {
     // This effect runs whenever the 'socket' object changes (becomes available or changes)
     if (socket) {
-      // DEBUG: Listen for all events directly in RoomPage
-      const directTestListener = (eventName, ...args) => {
-        console.log(`%c[RoomPage DEBUG SOCKET (${socket.id})] Event Received: "${eventName}"`, 'color: green; font-weight: bold;', 'Data:', ...args);
-      };
-      socket.onAny(directTestListener);
-      console.log(`[RoomPage DEBUG SOCKET (${socket.id})] Attached onAny listener.`);
 
       // Define handleRoomDeleted inside useEffect to capture current currentUser and roomHostId
       const handleRoomDeleted = ({ roomId: deletedRoomId }) => {
-        console.log(`[RoomPage] Received room_deleted event for roomId: ${deletedRoomId}`);
         if (deletedRoomId === roomId) {
           // The room this user is currently in has been deleted
           // If not the host, set a flag so dashboard can show notification
           if (!(currentUser && roomHostId && currentUser.id === roomHostId)) {
-            console.log(`[RoomPage] Participant (current user ${currentUser?.id} is NOT host ${roomHostId}) in room (${roomId}) which was deleted. Setting flag for dashboard notification.`);
             localStorage.setItem('watchPartyRoomEndedByHost', 'true');
             // No alert here, dashboard will handle it.
           } else {
-            console.log(`[RoomPage] Host (current user ${currentUser?.id} IS host ${roomHostId}) in room (${roomId}) which was deleted. NOT setting flag.`);
+            // Host deleted the room, no special flag needed for them.
           }
           // Automatically trigger the leave room logic for this user (host or participant)
           // This will clear their currentRoomId and navigate them away
@@ -130,14 +121,10 @@ const RoomPage = ({ currentUser }) => { // Accept currentUser as a prop
       };
 
       socket.on('room_deleted', handleRoomDeleted);
-      console.log(`[RoomPage DEBUG SOCKET (${socket.id})] Attached 'room_deleted' listener.`);
 
       return () => {
           // Detach listeners on cleanup
-          socket.offAny(directTestListener);
-          console.log(`[RoomPage DEBUG SOCKET (${socket.id})] Detached onAny listener.`);
           socket.off('room_deleted', handleRoomDeleted); // Detach 'room_deleted' listener here
-          console.log(`[RoomPage DEBUG SOCKET (${socket.id})] Detached 'room_deleted' listener in cleanup.`);
         };
       }
   }, [socket, currentUser, roomHostId, roomId, handleLeaveRoom]); // Correct dependencies

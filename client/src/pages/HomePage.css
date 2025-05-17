@@ -36,31 +36,35 @@
   background-image: var(--accent-gradient); /* Apply the new gradient */
   color: var(--button-text-on-gold, #000000); /* Ensure black text on gold */
   border: none;
+  /* Adding a default border width for consistent sizing, primary button effectively has no visible border due to "border: none" */
+  /* If you want exact same size, primary could have "border: 2px solid transparent;" and this could be "border-width: 2px;" */
   padding: var(--spacing-md) var(--spacing-xl);
   border-radius: var(--border-radius);
   cursor: pointer;
-  transition: transform 0.1s ease; /* background-image gradients don't transition like background-color */
   font-size: 1rem;
   text-decoration: none;
   font-weight: bold;
+  transition: transform 0.1s ease, background-image 0.3s ease, background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .homePageButton:hover {
   background-image: var(--accent-gradient-hover); /* Apply the hover gradient */
   color: var(--button-text-on-gold, #000000); /* Ensure text color remains consistent on hover */
+  /* transform: translateY(-1px); Optional: slight lift effect */
 }
 
 .homePageButton.secondary {
-  /* Apply the same gradient styling as the primary button */
-  background-image: var(--accent-gradient);
-  color: var(--button-text-on-gold, #000000);
-  border: none; /* Remove border if it was an outline style */
+  background-image: none; /* Remove gradient for secondary button */
+  background-color: transparent;
+  color: var(--accent-primary, #FFD700); /* Golden text */
+  border: 2px solid var(--accent-primary, #FFD700); /* Golden border */
 }
 
 .homePageButton.secondary:hover {
-  /* Apply the same hover gradient styling */
-  background-image: var(--accent-gradient-hover);
-  color: var(--button-text-on-gold, #000000);
+  background-image: none; /* Ensure no gradient on hover for secondary */
+  background-color: var(--accent-primary, #FFD700); /* Golden background on hover */
+  color: var(--button-text-on-gold, #000000); /* Black text on golden background */
+  border-color: var(--accent-primary, #FFD700); /* Keep border color, or make it darker if preferred */
 }
 
 /* Responsive adjustments */

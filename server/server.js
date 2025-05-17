@@ -1,12 +1,12 @@
 require('dotenv').config(); // This should be at the top
 
-console.log("-----------------------------------------------------");
-console.log("[SERVER STARTUP] Attempting to load .env variables...");
-console.log(`[SERVER STARTUP] process.env.PORT: ${process.env.PORT}`);
-console.log(`[SERVER STARTUP] process.env.MONGODB_URI: ${process.env.MONGODB_URI ? 'SET' : 'NOT SET or EMPTY'}`);
-console.log(`[SERVER STARTUP] process.env.JWT_SECRET: ${process.env.JWT_SECRET ? 'SET (length: ' + process.env.JWT_SECRET.length + ')' : 'NOT SET or EMPTY'}`);
-console.log(`[SERVER STARTUP] process.env.CORS_ORIGIN: ${process.env.CORS_ORIGIN}`);
-console.log("-----------------------------------------------------");
+// console.log("-----------------------------------------------------");
+// console.log("[SERVER STARTUP] Attempting to load .env variables...");
+// console.log(`[SERVER STARTUP] process.env.PORT: ${process.env.PORT}`);
+// console.log(`[SERVER STARTUP] process.env.MONGODB_URI: ${process.env.MONGODB_URI ? 'SET' : 'NOT SET or EMPTY'}`);
+// console.log(`[SERVER STARTUP] process.env.JWT_SECRET: ${process.env.JWT_SECRET ? 'SET (length: ' + process.env.JWT_SECRET.length + ')' : 'NOT SET or EMPTY'}`);
+// console.log(`[SERVER STARTUP] process.env.CORS_ORIGIN: ${process.env.CORS_ORIGIN}`);
+// console.log("-----------------------------------------------------");
 
 const express = require('express');
 const http = require('http');
@@ -30,11 +30,11 @@ connectDB();
 
 const app = express();
 
-// Simple request logger middleware
-app.use((req, res, next) => {
-  console.log(`[SERVER INCOMING REQUEST] ${req.method} ${req.originalUrl}`);
-  next();
-});
+// // Simple request logger middleware (can be re-enabled for debugging)
+// app.use((req, res, next) => {
+//   console.log(`[SERVER INCOMING REQUEST] ${req.method} ${req.originalUrl}`);
+//   next();
+// });
 
 // CORS Configuration
 const corsOptions = {
@@ -84,7 +84,7 @@ app.get('/', (req, res) => {
 
 // Initialize roomRoutes with io instance
 const roomRouter = initializeRoomRoutes(io); // Call the function to get the router
-console.log('[SERVER STARTUP] roomRouter initialized. Type:', typeof roomRouter);
+// console.log('[SERVER STARTUP] roomRouter initialized. Type:', typeof roomRouter); // Optional: keep if you want to confirm router setup
 
 app.use('/api/auth', authRoutes); // Mount auth routes
 // --- MOUNT THE NEW ROOM ROUTES ---
@@ -96,11 +96,11 @@ const getRoomParticipants = (roomId) => {
   const room = io.sockets.adapter.rooms.get(roomId);
   if (!room) return [];
   const participants = [];
-  console.log(`[getRoomParticipants] Processing room: ${roomId}. Sockets in room: ${room ? [...room].join(', ') : 'N/A (room not found or empty)'}`);
+  // console.log(`[getRoomParticipants] Processing room: ${roomId}. Sockets in room: ${room ? [...room].join(', ') : 'N/A (room not found or empty)'}`);
   for (const socketId of room) {
     const participantSocket = io.sockets.sockets.get(socketId);
     // Log the raw user object attached to the socket, if it exists
-    console.log(`[getRoomParticipants] For socketId ${socketId}, participantSocket.user:`, participantSocket ? JSON.stringify(participantSocket.user) : 'Socket not found');
+    // console.log(`[getRoomParticipants] For socketId ${socketId}, participantSocket.user:`, participantSocket ? JSON.stringify(participantSocket.user) : 'Socket not found');
     if (participantSocket && participantSocket.user) {
       // Return user info if available on the socket
       participants.push({
@@ -113,22 +113,22 @@ const getRoomParticipants = (roomId) => {
       participants.push({ id: socketId, username: 'Anonymous' });
     }
   }
-  console.log(`[getRoomParticipants] Final participants list for room ${roomId}:`, JSON.stringify(participants));
+  // console.log(`[getRoomParticipants] Final participants list for room ${roomId}:`, JSON.stringify(participants));
   return participants;
 };
 
 // Socket.IO connection
 io.on('connection', (socket) => {
-  console.log("=====================================================");
-  console.log(`[SERVER IO] !!! NEW SOCKET CONNECTION ATTEMPT !!! Socket ID: ${socket.id}`);
+  // console.log("=====================================================");
+  // console.log(`[SERVER IO] !!! NEW SOCKET CONNECTION ATTEMPT !!! Socket ID: ${socket.id}`);
   let { roomId, token } = socket.handshake.query; // Use let for roomId
-  console.log(`[SERVER IO] Handshake Query: roomId=${roomId}, token=${token ? 'PRESENT' : 'ABSENT'}`);
-  console.log(`[SERVER IO] JWT_SECRET available in this handler: ${process.env.JWT_SECRET ? 'YES' : 'NO!!!'}`);
-  console.log("=====================================================");
+  // console.log(`[SERVER IO] Handshake Query: roomId=${roomId}, token=${token ? 'PRESENT' : 'ABSENT'}`);
+  // console.log(`[SERVER IO] JWT_SECRET available in this handler: ${process.env.JWT_SECRET ? 'YES' : 'NO!!!'}`);
+  // console.log("=====================================================");
 
   // All connections require a token
   if (!token) {
-    console.log(`[SERVER IO] Socket ${socket.id} attempted to connect (room query: ${roomId || 'N/A'}) without a token. Disconnecting.`);
+    console.warn(`[SERVER IO] Socket ${socket.id} attempted to connect (room query: ${roomId || 'N/A'}) without a token. Disconnecting.`);
     socket.disconnect(true);
     return;
   }
@@ -156,16 +156,16 @@ io.on('connection', (socket) => {
             return;
           } else {
             socket.user = user; // Attach user info to the socket instance
-            console.log(`[SERVER IO] User ${socket.user.username} (${socket.id}) authenticated. Room query: ${roomId || 'N/A (general connection)'}.`);
+            // console.log(`[SERVER IO] User ${socket.user.username} (${socket.id}) authenticated. Room query: ${roomId || 'N/A (general connection)'}.`);
             
             if (roomId) { // This is a room-specific connection
-              console.log(`[SERVER IO] Proceeding to join room ${roomId} for user ${socket.user.username}.`);
+              // console.log(`[SERVER IO] Proceeding to join room ${roomId} for user ${socket.user.username}.`);
               socket.join(roomId);
-              console.log(`[SERVER IO] User ${socket.user.username} (${socket.id}) has joined Socket.IO room: ${roomId}`);
+              // console.log(`[SERVER IO] User ${socket.user.username} (${socket.id}) has joined Socket.IO room: ${roomId}`);
 
             // IMMEDIATE TEST EMIT
-            socket.emit('direct_test_event', { message: `Hello from server to socket ${socket.id} in room ${roomId}` });
-            console.log(`[SERVER DEBUG] DIRECTLY EMITTED 'direct_test_event' to socket ${socket.id}`);
+            // socket.emit('direct_test_event', { message: `Hello from server to socket ${socket.id} in room ${roomId}` });
+            // console.log(`[SERVER DEBUG] DIRECTLY EMITTED 'direct_test_event' to socket ${socket.id}`);
 
             // 2. Initialize or retrieve room state
             if (!roomVideoStates[roomId]) {
@@ -180,14 +180,14 @@ io.on('connection', (socket) => {
                   lastActionBy: null, 
                   controllerIds: []
                 };
-                console.log(`[SERVER] Initialized NEW room state for ${roomId} with host ${socket.user.username}:`, roomVideoStates[roomId]);
+                // console.log(`[SERVER] Initialized NEW room state for ${roomId} with host ${socket.user.username}:`, roomVideoStates[roomId]);
               } else {
                 console.error(`[SERVER] DB Room ${roomId} not found for user ${socket.user.username}. Initializing fallback state.`);
                 roomVideoStates[roomId] = { // Fallback
                   hostId: socket.user._id.toString(), url: null, referenceTime: 0,
                   referenceTimestamp: Date.now(), isPlaying: false, lastActionBy: null, controllerIds: []
                 };
-                console.log(`[SERVER] Initialized FALLBACK room state for ${roomId} with host ${socket.user.username}:`, roomVideoStates[roomId]);
+                // console.log(`[SERVER] Initialized FALLBACK room state for ${roomId} with host ${socket.user.username}:`, roomVideoStates[roomId]);
               }
             } else {
               // Existing room session, ensure state is complete (defensive) - your existing logic here is good
@@ -202,7 +202,7 @@ io.on('connection', (socket) => {
               }
               if (typeof existingState.controllerIds === 'undefined') existingState.controllerIds = [];
               roomVideoStates[roomId] = existingState;
-              console.log(`[SERVER] Using EXISTING room state for ${roomId} for user ${socket.user.username}:`, roomVideoStates[roomId]);
+              // console.log(`[SERVER] Using EXISTING room state for ${roomId} for user ${socket.user.username}:`, roomVideoStates[roomId]);
             }
             
             // 3. Prepare and broadcast sync_room_state
@@ -222,32 +222,31 @@ io.on('connection', (socket) => {
               };
               roomVideoStates[roomId] = broadcastState; // Update the authoritative state
               io.to(roomId).emit('sync_room_state', broadcastState);
-              console.log(`[SERVER] Room ${roomId} BROADCASTED sync state for user ${socket.user.username}. Sent state:`, broadcastState);
+              // console.log(`[SERVER] Room ${roomId} BROADCASTED sync state for user ${socket.user.username}. Sent state:`, broadcastState);
             }
 
             // 4. Broadcast update_participants
             const currentParticipants = getRoomParticipants(roomId);
             io.to(roomId).emit('update_participants', currentParticipants);
-            console.log(`[SERVER] BROADCASTED update_participants for room ${roomId}. Participants:`, currentParticipants.map(p => p.username));
+            // console.log(`[SERVER] BROADCASTED update_participants for room ${roomId}. Participants:`, currentParticipants.map(p => p.username));
             
             // DEBUG: Emit directly to the joining socket as well
-            socket.emit('update_participants', currentParticipants);
-            console.log(`[SERVER DEBUG] DIRECTLY EMITTED update_participants to socket ${socket.id} with data:`, JSON.stringify(currentParticipants));
+            // socket.emit('update_participants', currentParticipants);
+            // console.log(`[SERVER DEBUG] DIRECTLY EMITTED update_participants to socket ${socket.id} with data:`, JSON.stringify(currentParticipants));
 
             // 5. Send chat history
             socket.emit('chat_history', roomChatHistories[roomId] || []);
-            if (roomChatHistories[roomId]) {
-                console.log(`[SERVER] Sent chat history of ${roomChatHistories[roomId].length} messages to ${user.username} for room ${roomId}`);
-            } else {
-                console.log(`[SERVER] Sent empty chat history to ${user.username} for room ${roomId}`);
-            }
+            // if (roomChatHistories[roomId]) {
+                // console.log(`[SERVER] Sent chat history of ${roomChatHistories[roomId].length} messages to ${user.username} for room ${roomId}`);
+            // } else {
+                // console.log(`[SERVER] Sent empty chat history to ${user.username} for room ${roomId}`);
+            // }
             
             // Specific event handlers for room-specific sockets go here
             // (e.g., send_message, load_video, etc. are already here and should remain within the if(roomId) block if they depend on it)
-
             } else { // No roomId in query - this is a general authenticated socket (e.g., for dashboard)
               // It's authenticated but not joined to a specific room via query.
-              console.log(`[SERVER IO] User ${socket.user.username} (${socket.id}) established a general authenticated connection.`);
+              // console.log(`[SERVER IO] User ${socket.user.username} (${socket.id}) established a general authenticated connection.`);
               // No specific room joining actions here unless you want to add them to a "lobby" room.
             }
 
@@ -260,7 +259,7 @@ io.on('connection', (socket) => {
             // Handle chat messages
             socket.on('send_message', (data) => {
               if (socket.user && data.room === roomId) {
-                console.log(`Message in room ${roomId} from ${socket.user.username}: ${data.text}`);
+                // console.log(`Message in room ${roomId} from ${socket.user.username}: ${data.text}`);
                 const messageObject = {
                   text: data.text,
                   sender: { id: socket.user._id, username: socket.user.username },
@@ -277,7 +276,7 @@ io.on('connection', (socket) => {
             // Video control events
             socket.on('load_video', (data) => {
               if (socket.user && data.roomId === roomId && canControlVideo(roomId, socket.user._id)) {
-                console.log(`Video load request in room ${roomId} from ${socket.user.username} for URL: ${data.url}`);
+                // console.log(`Video load request in room ${roomId} from ${socket.user.username} for URL: ${data.url}`);
                 roomVideoStates[roomId] = {
                   ...roomVideoStates[roomId],
                   url: data.url,
@@ -288,7 +287,7 @@ io.on('connection', (socket) => {
                 };
                 io.to(roomId).emit('video_loaded', { url: data.url, requestedBy: { id: socket.user._id, username: socket.user.username } });
                 io.to(roomId).emit('sync_room_state', roomVideoStates[roomId]);
-                console.log(`[SERVER] Room ${roomId} state updated after video load:`, roomVideoStates[roomId]);
+                // console.log(`[SERVER] Room ${roomId} state updated after video load:`, roomVideoStates[roomId]);
               } else if (socket.user && data.roomId === roomId) {
                 socket.emit('control_error', { message: 'Only the host or a controller can load videos.' });
               }
@@ -374,7 +373,7 @@ io.on('connection', (socket) => {
                 }
                 if (data.targetUserId && !roomState.controllerIds.includes(data.targetUserId.toString())) {
                   roomState.controllerIds.push(data.targetUserId.toString());
-                  console.log(`[SERVER] User ${data.targetUserId} granted control in room ${roomId} by ${socket.user.username}. Controllers: ${roomState.controllerIds.join(', ')}`);
+                  // console.log(`[SERVER] User ${data.targetUserId} granted control in room ${roomId} by ${socket.user.username}. Controllers: ${roomState.controllerIds.join(', ')}`);
                   // Broadcast the updated state which includes the new controllerIds
                   io.to(roomId).emit('sync_room_state', roomState);
                 }
@@ -393,7 +392,7 @@ io.on('connection', (socket) => {
                   const initialLength = roomState.controllerIds.length;
                   roomState.controllerIds = roomState.controllerIds.filter(id => id !== data.targetUserId.toString());
                   if (roomState.controllerIds.length < initialLength) {
-                    console.log(`[SERVER] User ${data.targetUserId} revoked control in room ${roomId} by ${socket.user.username}. Controllers: ${roomState.controllerIds.join(', ')}`);
+                    // console.log(`[SERVER] User ${data.targetUserId} revoked control in room ${roomId} by ${socket.user.username}. Controllers: ${roomState.controllerIds.join(', ')}`);
                     // Broadcast the updated state
                     io.to(roomId).emit('sync_room_state', roomState);
                   }
@@ -410,14 +409,14 @@ io.on('connection', (socket) => {
               const identifier = socket.user ? `${socket.user.username} (${socket.id})` : `Socket ${socket.id}`;
               // Use the roomId captured at connection time for this socket instance
               const connectionRoomId = socket.handshake.query.roomId; // This is the shareable UUID
-              console.log(`[SERVER IO] Authenticated user ${identifier} disconnected. Room query was: ${connectionRoomId || 'N/A'}. Reason: ${reason}`);
+              // console.log(`[SERVER IO] Authenticated user ${identifier} disconnected. Room query was: ${connectionRoomId || 'N/A'}. Reason: ${reason}`);
               if (connectionRoomId) { // If it was a room-specific connection, update participants for that room
                 // Call the leave room logic
                 // We need the user's ID (socket.user._id) and the shareable room ID (connectionRoomId)
                 // Pass io to the logic function
                 if (socket.user && socket.user._id) {
                     roomController.handleUserLeaveRoomLogic(socket.user._id, connectionRoomId, io)
-                        .then(result => console.log(`[SERVER IO] handleUserLeaveRoomLogic result for ${identifier} from room ${connectionRoomId}:`, result))
+                        // .then(result => console.log(`[SERVER IO] handleUserLeaveRoomLogic result for ${identifier} from room ${connectionRoomId}:`, result))
                         .catch(err => console.error(`[SERVER IO] Uncaught error in handleUserLeaveRoomLogic for ${identifier} from room ${connectionRoomId}:`, err));
                 }
               }
@@ -434,7 +433,7 @@ io.on('connection', (socket) => {
   } else {
     // Decide how to handle connections without a token.
     // For a secure app, you usually want to disconnect them.
-    console.log(`[SERVER IO] Socket ${socket.id} attempted to connect (room query: ${roomId || 'N/A'}) without a token. Disconnecting.`);
+    console.warn(`[SERVER IO] Socket ${socket.id} attempted to connect (room query: ${roomId || 'N/A'}) without a token. Disconnecting.`);
     socket.disconnect(true);
     return;
   }
@@ -452,7 +451,7 @@ io.on('connection', (socket) => {
   socket.on('disconnect', (reason) => {
     // If socket.user is not attached, it means this socket didn't fully authenticate/join.
     const connectionRoomId = socket.handshake.query.roomId; // Get roomId from handshake for this specific socket
-    console.log(`[SERVER IO] Socket ${socket.id} (potentially unauthenticated or pre-join) disconnected. Room query: ${connectionRoomId || 'N/A'}. Reason: ${reason}`);
+    // console.log(`[SERVER IO] Socket ${socket.id} (potentially unauthenticated or pre-join) disconnected. Room query: ${connectionRoomId || 'N/A'}. Reason: ${reason}`);
     // If it was in a room, update_participants would be handled by the specific disconnect if it fired,
     // or by Socket.IO's automatic room leaving. We can still broadcast an update if roomId is known.
     if (connectionRoomId) { // Use the specific roomId for this socket

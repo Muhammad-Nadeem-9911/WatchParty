@@ -121,7 +121,7 @@ button, input, select, textarea {
 .navLogoLink:hover {
   color: var(--gold-light); /* Brighter gold on hover */
   text-shadow: 0 0 8px var(--gold-main-transparent); /* Subtle glow effect */
-  background-color: var(--background-tertiary); /* Subtle background highlight */
+  /* background-color: var(--background-tertiary); */ /* REMOVED background change for logo hover */
 }
 .appNavbar li {
   display: inline-block;
@@ -138,13 +138,9 @@ button, input, select, textarea {
 }
 
 .userInfoDisplay:hover {
-  background-color: var(--background-tertiary);
+  /* background-color: var(--background-tertiary); */ /* REMOVED background change */
 }
 
-.userInfoDisplay:hover .userIconButton,
-.userInfoDisplay:hover .userNameDisplay {
-  color: var(--accent-primary); /* Golden icon and name on hover */
-}
 
 .userMenuContainer {
   position: relative;
@@ -167,7 +163,17 @@ button, input, select, textarea {
   color: var(--text-primary);
   font-size: 0.9rem;
   font-weight: 500;
-  transition: color 0.2s ease; /* Smooth color transition */
+  transition: color 0.2s ease, text-shadow 0.2s ease; /* Added text-shadow for smooth glow */
+}
+
+/* Specific hover for user icon and name within userInfoDisplay */
+.appNavbar .userInfoDisplay:hover .userIconButton {
+  color: var(--accent-primary); /* Main gold for icon */
+}
+
+.appNavbar .userInfoDisplay:hover .userNameDisplay {
+  color: var(--gold-light); /* Brighter gold for name */
+  text-shadow: 0 0 8px var(--gold-main-transparent); /* Glow for name */
 }
 
 .dropdownMenu {
@@ -201,12 +207,12 @@ button, input, select, textarea {
   align-items: center;
   gap: var(--spacing-sm); /* Space between icon and text */
   text-decoration: none; /* Ensure Link doesn't have underline by default */
-
+  transition: color 0.2s ease-in-out; /* Add transition for the item's text color */
 }
 
 .dropdownMenuItem:hover {
-  background-color: var(--accent-primary-transparent); /* Golden transparent background */
-  color: var(--accent-primary); /* Golden text */
+  /* background-color: var(--accent-primary-transparent); */ /* REMOVED background change */
+  color: var(--accent-primary); /* Main Golden text for dropdown items */
 }
 
 .userMenuContainer:hover .dropdownMenu {
@@ -218,7 +224,7 @@ button, input, select, textarea {
 .dropdownItemIcon {
   font-size: 1em; /* Adjust icon size relative to text */
   color: var(--text-secondary); /* Default icon color */
-  transition: color 0.2s ease-in-out;
+  transition: color 0.2s ease-in-out; /* Keep transition for the icon's color */
 }
 
 .dropdownMenuItem:hover .dropdownItemIcon {
@@ -230,13 +236,14 @@ button, input, select, textarea {
   text-decoration: none;
   padding: var(--spacing-xs) var(--spacing-sm);
   border-radius: var(--border-radius);
-  transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out;
+  /* Removed background-color from transition for general links/buttons */
+  transition: color 0.2s ease-in-out; 
   font-size: 0.95rem;
 }
 
 .appNavbar a:hover, .appNavbar button:hover {
   color: var(--accent-primary); /* Golden text on hover for general nav links */
-  background-color: var(--background-tertiary);
+  /* Ensure no background-color is set here if not desired for general links */
 }
 
 .appNavbar button {
@@ -246,21 +253,22 @@ button, input, select, textarea {
 }
 
 /* Styles for the combined Login/Signup button */
-.authActionDisplay {
+.appNavbar .authActionDisplay { /* Increased specificity */
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
   padding: var(--spacing-xs) var(--spacing-sm);
   border-radius: var(--border-radius);
   cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: color 0.2s ease, text-shadow 0.2s ease; /* Added text-shadow for potential glow */
   color: var(--text-secondary); /* Start with secondary text color */
   text-decoration: none; /* For Link component */
 }
 
-.authActionDisplay:hover {
-  color: var(--accent-primary); /* Golden text on hover */
-  background-color: var(--background-tertiary);
+.appNavbar .authActionDisplay:hover { /* Increased specificity */
+  color: var(--gold-light); /* Brighter gold on hover, matching logo text color */
+  text-shadow: 0 0 8px var(--gold-main-transparent); /* Subtle glow effect, matching logo */
+  /* background-color: var(--background-tertiary); */ /* REMOVED background change */
 }
 
 .pageContent {
