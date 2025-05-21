@@ -1,0 +1,107 @@
+/* d:\WatchParty\client\src\pages\SplashScreen.css */
+.splash-screen {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100vw;
+  color: #f5f5f5; /* Very light grey, almost white for default text */
+  overflow: hidden; /* Prevent scrollbars during animation */
+  font-family: 'Arial', sans-serif; /* Fallback font, consider using your project's font */
+  /* Animated gradient background - Adjusted to a darker, more uniform theme */
+  background: linear-gradient(-45deg, #1a1a1a, #101010, #151515, #0d0d0d); /* Very dark grey/off-black gradient */
+  background-size: 400% 400%; /* Keep animation size */
+  animation: gradientBG 15s ease infinite;
+  position: fixed; /* Ensure it covers the whole screen */
+  top: 0;
+  left: 0;
+  z-index: 9999; /* Make sure it's on top */
+}
+
+.splash-content {
+  text-align: center;
+}
+
+.splash-title {
+  font-size: 4.5rem; /* Large title */
+  font-weight: bold;
+  color: #FFBF00; /* Vibrant Amber/Gold color */
+  margin-bottom: 20px;
+  animation: fadeInScaleUp 1.5s ease-out forwards;
+  opacity: 0;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.splash-tagline {
+  font-size: 1.6rem;
+  color: #c0c0c0; /* Light grey for good contrast on very dark background */
+  margin-bottom: 40px;
+  animation: fadeInSlideUp 2s ease-out forwards;
+  opacity: 0;
+  animation-delay: 0.5s; /* Delay after title */
+}
+
+.play-icon-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 30px;
+  animation: fadeInSlideUp 2s ease-out forwards; /* Re-use animation for consistency */
+  opacity: 0;
+  animation-delay: 1s; /* Delay after tagline */
+}
+
+.play-icon {
+  width: 80px;
+  height: 80px;
+  background-color: #FFBF00; /* Vibrant Amber/Gold color */
+  border-radius: 50%;
+  position: relative;
+  box-shadow: 0 0 25px rgba(255, 191, 0, 0.6); /* Amber/Gold shadow */
+  animation: pulse 2s infinite ease-in-out;
+  animation-delay: 1.5s; /* Start pulsing after it appears */
+}
+
+.play-icon::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 55%; /* Slightly offset for better triangle appearance */
+  transform: translate(-50%, -50%);
+  width: 0;
+  height: 0;
+  border-top: 20px solid transparent;
+  border-bottom: 20px solid transparent;
+  border-left: 30px solid #101010; /* Updated to match the new darkest background shade */
+}
+
+@keyframes gradientBG {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes fadeInScaleUp {
+  0% { opacity: 0; transform: scale(0.5) translateY(20px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes fadeInSlideUp {
+  0% { opacity: 0; transform: translateY(30px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(255, 191, 0, 0.7); /* Amber/Gold pulse shadow */
+  }
+  70% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 15px rgba(255, 191, 0, 0); /* Amber/Gold pulse shadow */
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(255, 191, 0, 0); /* Amber/Gold pulse shadow */
+  }
+}

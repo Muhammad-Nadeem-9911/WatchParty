@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Switch, Route, Link, Redirect, useHistory, useLocation } from 'react-router-dom';
+import SplashScreen from './pages/SplashScreen'; // Import the SplashScreen
 import HomePage from './pages/HomePage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage'; // Import the ForgotPasswordPage
 import LoginPage from './pages/LoginPage';
@@ -161,9 +162,14 @@ function App() {
 
       <div className="pageContent">
           <Switch>
-          <Route exact path="/">
-            <HomePage isLoggedIn={isLoggedIn} currentUser={currentUser} />
-          </Route>            <Route path="/login">
+          {/* SplashScreen will be the first route users hit */}
+          <Route exact path="/" component={SplashScreen} />
+
+          {/* HomePage is now at /home, SplashScreen will redirect here */}
+          <Route path="/home">
+             <HomePage isLoggedIn={isLoggedIn} currentUser={currentUser} />
+          </Route>
+          <Route path="/login">
               {isLoggedIn ? <Redirect to="/dashboard" /> : <LoginPage onLoginSuccess={handleLoginSuccess} />}
             </Route>
             <Route path="/verify-email/:token">
@@ -195,7 +201,7 @@ function App() {
             </Route>
             {/* Catch-all or 404 page */}
             <Route path="*">
-              <Redirect to="/" />
+              <Redirect to="/home" /> {/* Redirect unknown paths to home, or to splash if you prefer initial load */}
             </Route>
           </Switch>
         </div>
